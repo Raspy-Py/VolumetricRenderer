@@ -26,9 +26,17 @@ include(cmake/CompilerWarnings.cmake)
 
 set(INC ${CMAKE_SOURCE_DIR}/include)
 set(SRC ${CMAKE_SOURCE_DIR}/source)
-set(VND ${CMAKE_SOURCE_DIR}/vendor) # Third party
+set(VND ${CMAKE_SOURCE_DIR}/vendor)
 
-add_executable(${PROJECT_NAME} ${SRC}/main.cpp
+add_executable(${PROJECT_NAME}
+        # Source only
+        ${SRC}/Etna/EntryPoint.cpp
+        ${SRC}/EtnaApplication.cpp
+
+        # Header - Source
+        ${SRC}/Etna/Etna.h ${SRC}/Etna/Etna.cpp
+
+        # Third-party
         ${VND}/imgui/imconfig.h
         ${VND}/imgui/imgui.h
         ${VND}/imgui/imgui_impl_glfw.h
