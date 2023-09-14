@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.22)
 
 set(PROJECT_NAME VolumetricRenderer)
 project(${PROJECT_NAME} C CXX)
@@ -29,14 +29,24 @@ set(SRC ${CMAKE_SOURCE_DIR}/source)
 set(VND ${CMAKE_SOURCE_DIR}/vendor)
 
 add_executable(${PROJECT_NAME}
+        # Header only
+        ${SRC}/Etna/Core/Environment.h
+
         # Source only
-        ${SRC}/Etna/EntryPoint.cpp
+        ${SRC}/Etna/Core/EntryPoint.cpp
         ${SRC}/EtnaApplication.cpp
 
         # Header - Source
-        ${SRC}/Etna/Etna.h ${SRC}/Etna/Etna.cpp
+        ${SRC}/Etna/Core/Etna.h         ${SRC}/Etna/Core/Etna.cpp
+        ${SRC}/Etna/Core/Clock.h        ${SRC}/Etna/Core/Clock.cpp
+        ${SRC}/Etna/Core/Exception.h    ${SRC}/Etna/Core/Exception.cpp
+        ${SRC}/Etna/Core/ImGuiTheme.h   ${SRC}/Etna/Core/ImGuiTheme.cpp
+        ${SRC}/Etna/Layers/Canvas.h     ${SRC}/Etna/Layers/Canvas.cpp
 
         # Third-party
+        ${VND}/loguru/loguru.hpp
+        ${VND}/loguru/loguru.cpp
+
         ${VND}/imgui/imconfig.h
         ${VND}/imgui/imgui.h
         ${VND}/imgui/imgui_impl_glfw.h
@@ -51,7 +61,8 @@ add_executable(${PROJECT_NAME}
         ${VND}/imgui/imgui_demo.cpp
         ${VND}/imgui/imgui_draw.cpp
         ${VND}/imgui/imgui_tables.cpp
-        ${VND}/imgui/imgui_widgets.cpp)
+        ${VND}/imgui/imgui_widgets.cpp
+)
 
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${SRC} ${INC} ${VND})
