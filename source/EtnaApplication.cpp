@@ -1,6 +1,6 @@
 #include "Etna/Core/Etna.h"
 
-#include "Etna/Layers/Canvas.h"
+#include "Etna/Layers/Canvas/Canvas.h"
 
 #include "imgui/imgui.h"
 #include "loguru/loguru.hpp"
@@ -20,6 +20,7 @@ class TestLayer : public Etna::Layer
 
         bool operator()()
         {
+            ImGui::SetNextItemWidth(300);
             ImGui::ColorEdit3("##Color", Color);
             bool changed = false;
             if (Color[0] != PrevColor[0] ||
@@ -79,7 +80,7 @@ private:
 uint32_t TestLayer::Counter = 0;
 std::function<void()> TestLayer::AddFunc = []{};
 
-
+// Inspired by Walnut (C) Studio Cherno
 Etna::Application* Etna::CreateApplication()
 {
     ApplicationInfo appInfo = {

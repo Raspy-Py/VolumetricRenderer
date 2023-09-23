@@ -6899,7 +6899,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         window->DecoOuterSizeX2 = 0.0f;
         window->DecoOuterSizeY1 = window->TitleBarHeight() + window->MenuBarHeight();
         window->DecoOuterSizeY2 = 0.0f;
-        window->ScrollbarSizes = ImVec2(0.0f, 0.0f);
+        window->ScrollbarSizes = ImVec2(0.0f, 0.0f); 
 
         // Calculate auto-fit size, handle automatic resize
         const ImVec2 size_auto_fit = CalcWindowAutoFitSize(window, window->ContentSizeIdeal);

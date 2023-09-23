@@ -41,7 +41,9 @@ add_executable(${PROJECT_NAME}
         ${SRC}/Etna/Core/Clock.h        ${SRC}/Etna/Core/Clock.cpp
         ${SRC}/Etna/Core/Exception.h    ${SRC}/Etna/Core/Exception.cpp
         ${SRC}/Etna/Core/ImGuiTheme.h   ${SRC}/Etna/Core/ImGuiTheme.cpp
-        ${SRC}/Etna/Layers/Canvas.h     ${SRC}/Etna/Layers/Canvas.cpp
+
+        # Layers
+        ${SRC}/Etna/Layers/Canvas/Canvas.h     ${SRC}/Etna/Layers/Canvas/Canvas.cpp
 
         # Third-party
         ${VND}/loguru/loguru.hpp

@@ -549,7 +549,6 @@ namespace Etna
 
                 ImGui::End();
             }
-            // Update and render application layers
 
             // Rendering
             ImGui::Render();
