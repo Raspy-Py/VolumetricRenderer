@@ -3,7 +3,7 @@
 
 #include "Etna/Core/Etna.h"
 
-#include "Etna/Core/Environment.h"
+#include "Etna/Core/Vulkan/VulkanHeader.h"
 
 #include "imgui/imgui.h"
 #include "loguru/loguru.hpp"

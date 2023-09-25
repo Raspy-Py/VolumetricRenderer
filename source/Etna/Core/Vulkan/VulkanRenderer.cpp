@@ -1,16 +1,10 @@
+#include "VulkanRenderer.h"
+
+#include "Etna/Core/Utils.h"
 #include "VulkanContext.h"
 
-#include "Utils.h"
-#include <imgui/imgui.h>
-
-#include <set>
-#include <limits>
-
 /*
- *  Constant configuration data
- */
-
-static const int c_MaxFramesInFlight = 2;
+ static const int c_MaxFramesInFlight = 2;
 
 static const std::vector<const char*> c_ValidationLayers = {
     "VK_LAYER_KHRONOS_validation"
@@ -39,9 +33,9 @@ static const bool c_EnableValidationLayers = true;
 static const bool c_EnableValidationLayers = false;
 #endif // !NDEBUG
 
-/*
- * Hidden helper functions
- */
+
+//Hidden helper functions
+
 
 static bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension)
 {
@@ -592,20 +586,15 @@ static void SetupVulkan()
 }
 
 
+*/
+
 namespace vkc
 {
     void Init(GLFWwindow* window)
     {
         Window = window;
 
-        FrameIndex = 0;
-        FrameCount = c_MaxFramesInFlight;
-        
-        SetupVulkan();
-
-        CreateSwapChain();
-        CreateSwapChainImageViews();
-
+        Context::Create(window);
     }
 
     void Shutdown()

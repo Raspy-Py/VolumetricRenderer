@@ -6,7 +6,7 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_vulkan.h"
 
-#include "Environment.h"
+#include "Etna/Core/Vulkan/VulkanHeader.h"
 
 //#define IMGUI_UNLIMITED_FRAME_RATE
 #ifdef _DEBUG

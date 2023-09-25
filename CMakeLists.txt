@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22)
 set(PROJECT_NAME VolumetricRenderer)
 project(${PROJECT_NAME} C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(WARNINGS_AS_ERRORS OFF)
 set(ENABLE_PVS_STUDIO OFF)
 

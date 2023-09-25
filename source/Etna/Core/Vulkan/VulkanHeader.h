@@ -1,5 +1,5 @@
-#ifndef ENVIRONMENT_H
-#define ENVIRONMENT_H
+#ifndef VULKANHEADER_H
+#define VULKANHEADER_H
 
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
@@ -7,4 +7,4 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 
-#endif //ENVIRONMENT_H
+#endif //VULKANHEADER_H
