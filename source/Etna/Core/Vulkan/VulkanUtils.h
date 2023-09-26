@@ -94,6 +94,13 @@ namespace vkc
     QueueFamilyIndices GetQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
 
     void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+
+    VkCommandPool CreateCommandPool(uint32_t queueFamilyIndex);
+
+    VkCommandBuffer CreateCommandBuffer(VkCommandPool commandPool);
+
+    void CreateCommandBuffers(VkCommandPool commandPool, std::vector<VkCommandBuffer>& buffers, uint32_t count);
+
 }
 
 #endif //VULKANSTRUCTS_H

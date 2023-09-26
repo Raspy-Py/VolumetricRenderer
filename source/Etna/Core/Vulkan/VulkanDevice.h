@@ -37,7 +37,7 @@ namespace vkc
         DeviceBuilder() = default;
         ~DeviceBuilder() = default;
 
-        Device Build(VkInstance instance, VkSurfaceKHR surface);
+        Device Build();
 
     private:
         bool CheckDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);

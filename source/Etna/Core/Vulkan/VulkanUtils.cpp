@@ -1,6 +1,7 @@
 #include "VulkanUtils.h"
 
 #include "Etna/Core/Utils.h"
+#include "VulkanContext.h"
 
 namespace vkc
 {
@@ -108,5 +109,57 @@ namespace vkc
                                  VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
         createInfo.pfnUserCallback = DebugCallback;
         createInfo.pUserData = nullptr;
+    }
+
+    VkCommandPool CreateCommandPool(uint32_t queueFamilyIndex)
+    {
+        VkCommandPoolCreateInfo commandPoolInfo = {
+            .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+            .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+            .queueFamilyIndex = queueFamilyIndex
+        };
+
+        VkCommandPool commandPool;
+        if (vkCreateCommandPool(Context::GetDevice(), &commandPoolInfo, Context::GetAllocator(), &commandPool) != VK_SUCCESS)
+        {
+            Error("Failed to create graphics command pool.");
+        }
+
+        return commandPool;
+    }
+
+    VkCommandBuffer CreateCommandBuffer(VkCommandPool commandPool)
+    {
+        VkCommandBufferAllocateInfo allocInfo = {
+            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+            .commandPool = commandPool,
+            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+            .commandBufferCount = 1
+        };
+
+        VkCommandBuffer commandBuffer;
+        if (vkAllocateCommandBuffers(Context::GetDevice(), &allocInfo, &commandBuffer))
+        {
+            Error("Failed to allocate command buffer.");
+        }
+
+        return commandBuffer;
+    }
+
+    void CreateCommandBuffers(VkCommandPool commandPool, std::vector<VkCommandBuffer>& buffers, uint32_t count)
+    {
+        buffers.resize(count);
+        VkCommandBufferAllocateInfo allocInfo = {
+            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+            .commandPool = commandPool,
+            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+            .commandBufferCount = count
+        };
+
+        VkCommandBuffer commandBuffer;
+        if (vkAllocateCommandBuffers(Context::GetDevice(), &allocInfo, buffers.data()))
+        {
+            Error("Failed to allocate %d command buffers.", count);
+        }
     }
 }

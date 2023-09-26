@@ -21,7 +21,12 @@ namespace vkc
         SurfaceBuilder() = default;
         ~SurfaceBuilder() = default;
 
-        Surface Build(VkInstance instance, GLFWwindow* window);
+        Surface Build();
+
+        SurfaceBuilder& SetWindow(GLFWwindow* window);
+
+    private:
+        GLFWwindow* Window;
     };
 
 }

@@ -19,10 +19,14 @@ namespace vkc
 
         Singleton = new Context();
 
+        Singleton->GWindow = window;
+        // Don't change initialization order!
         Singleton->GInstance = InstanceBuilder{}.Build();
-        Singleton->GDebugMessenger = DebugMessengerBuilder{}.Build(Singleton->GInstance.Handle);
-        Singleton->GSurface = SurfaceBuilder{}.Build(Singleton->GInstance.Handle, window);
-        Singleton->GDevice = DeviceBuilder{}.Build(Singleton->GInstance.Handle, Singleton->GSurface.Handle);
+        Singleton->GDebugMessenger = DebugMessengerBuilder{}.Build();
+        Singleton->GSurface = SurfaceBuilder{}
+            .SetWindow(window)
+            .Build();
+        Singleton->GDevice = DeviceBuilder{}.Build();
     }
 
     void Context::Destroy()
@@ -36,4 +40,39 @@ namespace vkc
 
         return *Singleton;
     }
+
+    VkInstance Context::GetInstance()
+    {
+        return Get().GInstance.Handle;
+    }
+
+    VkDevice Context::GetDevice()
+    {
+        return Get().GDevice.Logical;
+    }
+
+    VkPhysicalDevice Context::GetPhysicalDevice()
+    {
+        return Get().GDevice.Physical;
+    }
+
+    VkSurfaceKHR Context::GetSurface()
+    {
+        return Get().GSurface.Handle;
+    }
+
+    VkAllocationCallbacks* Context::GetAllocator()
+    {
+        /*
+         * TODO: explore memory management
+         */
+
+        return nullptr;
+    }
+
+    GLFWwindow* Context::GetWindow()
+    {
+        return Get().GWindow;
+    }
+
 }

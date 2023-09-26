@@ -8,16 +8,15 @@ namespace vkc
 {
     DebugMessenger::~DebugMessenger()
     {
-        auto instance = Context::Get().GInstance.Handle;
-        auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+        auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Context::GetInstance(), "vkDestroyDebugUtilsMessengerEXT");
 
         if (func != nullptr)
-            func(instance, Handle, nullptr);
+            func(Context::GetInstance(), Handle, nullptr);
     }
 
-    DebugMessenger DebugMessengerBuilder::Build(VkInstance instance)
+    DebugMessenger DebugMessengerBuilder::Build()
     {
-        auto vkCreateDebugUtilsMessenger = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+        auto vkCreateDebugUtilsMessenger = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Context::GetInstance(), "vkCreateDebugUtilsMessengerEXT");
 
         if (vkCreateDebugUtilsMessenger == nullptr)
         {
@@ -27,7 +26,7 @@ namespace vkc
         DebugMessenger debugMessenger;
         VkDebugUtilsMessengerCreateInfoEXT createInfo{};
         PopulateDebugMessengerCreateInfo(createInfo);
-        vkCreateDebugUtilsMessenger(instance, &createInfo, nullptr, &debugMessenger.Handle);
+        vkCreateDebugUtilsMessenger(Context::GetInstance(), &createInfo, nullptr, &debugMessenger.Handle);
         return debugMessenger;
     }
 }

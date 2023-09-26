@@ -1,6 +1,7 @@
 #include "VulkanDevice.h"
 
 #include "VulkanUtils.h"
+#include "VulkanContext.h"
 #include "Etna/Core/Utils.h"
 
 #include <set>
@@ -19,9 +20,11 @@ namespace vkc
         VK_KHR_SWAPCHAIN_EXTENSION_NAME
     };
 
-    Device DeviceBuilder::Build(VkInstance instance, VkSurfaceKHR surface)
+    Device DeviceBuilder::Build()
     {
         Device device{};
+        auto surface = Context::GetSurface();
+        auto instance = Context::GetInstance();
 
         // Selecting physical device
         {

@@ -7,17 +7,23 @@ namespace vkc
 {
     Surface::~Surface()
     {
-        vkDestroySurfaceKHR(Context::Get().GInstance.Handle, Handle, nullptr);
+        vkDestroySurfaceKHR(Context::GetInstance(), Handle, nullptr);
     }
 
-    Surface SurfaceBuilder::Build(VkInstance instance, GLFWwindow *window)
+    Surface SurfaceBuilder::Build()
     {
         Surface surface;
-        if (glfwCreateWindowSurface(instance, window, nullptr, &surface.Handle) != VK_SUCCESS)
+        if (glfwCreateWindowSurface(Context::GetInstance(), Window, nullptr, &surface.Handle) != VK_SUCCESS)
         {
             Error("Failed to create window surface.");
         }
 
         return surface;
+    }
+
+    SurfaceBuilder& SurfaceBuilder::SetWindow(GLFWwindow* window)
+    {
+        Window = window;
+        return *this;
     }
 }

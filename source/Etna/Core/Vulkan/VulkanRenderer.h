@@ -1,11 +1,13 @@
+/*
+ * Main Vulkan render subsystem file.
+ * Whole system should function as a "black box"
+ * executing clients requests.
+ */
+
 #ifndef VULKANRENDERER_H
 #define VULKANRENDERER_H
 
 #include "VulkanContext.h"
-
-/*
- * Main Vulkan render subsystem file.
- */
 
 namespace vkc
 {

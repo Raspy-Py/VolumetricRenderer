@@ -599,7 +599,7 @@ namespace vkc
 
     void Shutdown()
     {
-
+        Context::Destroy();
     }
 
     void BeginFrame()

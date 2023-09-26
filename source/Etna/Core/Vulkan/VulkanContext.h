@@ -1,3 +1,9 @@
+/*
+ * Some data like VkInstance, VkPhysicalDevice, VkDevice etc.
+ * just have to be globally accessible. There is no work around.
+ * Long live the Global Vulkan Context!
+ */
+
 #ifndef VULKANCONTEXT_H
 #define VULKANCONTEXT_H
 
@@ -9,31 +15,34 @@
 
 namespace vkc
 {
-    /*
-     * Some data like VkInstance, VkPhysicalDevice, VkDevice etc.
-     * just have to be globally accessible. There is no work around.
-     * Long live the Global Vulkan Context!
-     */
-
     class Context
     {
     public:
-        static void Create(GLFWwindow* window);
+        static void Create(GLFWwindow *window);
         static void Destroy();
-        static Context& Get();
+        static Context &Get();
 
     public:
-        Instance    GInstance;
-        Surface     GSurface;
-        Device      GDevice;
+        static VkInstance GetInstance();
+        static VkDevice GetDevice();
+        static VkPhysicalDevice GetPhysicalDevice();
+        static VkSurfaceKHR GetSurface();
+        static VkAllocationCallbacks* GetAllocator();
+        static GLFWwindow* GetWindow();
 
-        DebugMessenger  GDebugMessenger;
+    private:
+        Instance GInstance;
+        Surface GSurface;
+        Device GDevice;
+
+        DebugMessenger GDebugMessenger;
+        GLFWwindow* GWindow;
 
     private:
         Context();
 
     private:
-        static Context* Singleton;
+        static Context *Singleton;
     };
 }
 

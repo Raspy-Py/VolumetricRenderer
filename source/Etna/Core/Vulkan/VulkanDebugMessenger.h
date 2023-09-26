@@ -21,7 +21,7 @@ namespace vkc
         DebugMessengerBuilder() = default;
         ~DebugMessengerBuilder() = default;
 
-        DebugMessenger Build(VkInstance instance);
+        DebugMessenger Build();
     };
 }
 
