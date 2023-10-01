@@ -23,6 +23,15 @@ namespace vkc
         Swapchain() = default;
         ~Swapchain() = default;
 
+        // Both methods return true, if swapchain needs to be recreated
+        // otherwise return false
+        bool AcquireNextImage(VkSemaphore semaphore);
+        bool PresentImage(VkSemaphore semaphore);
+
+    public:
+        uint32_t ImageCount;
+        uint32_t CurrentImage;
+
     private:
         VkSwapchainKHR Handle;
         VkFormat ImageFormat;
@@ -39,15 +48,17 @@ namespace vkc
 
         Swapchain Build();
 
-        SwapchainBuilder& SetOldSwapchain(VkSwapchainKHR oldSwapchain);
+        SwapchainBuilder& SetOldSwapchain(Swapchain* oldSwapchain);
 
     private:
         VkSurfaceFormatKHR ChooseSwapChainSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &formats);
         VkPresentModeKHR ChooseSwapChainPresentMode(const std::vector<VkPresentModeKHR> &presentModes);
         VkExtent2D ChooseSwapChainExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 
+        void CreateImageViews(Swapchain& swapchain);
+
     private:
-        VkSwapchainKHR  OldSwapChain = VK_NULL_HANDLE;
+        Swapchain* OldSwapChain = nullptr;
     };
 }
 
