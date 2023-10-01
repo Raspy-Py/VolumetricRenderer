@@ -2,6 +2,8 @@
 
 #include "Etna/Core/Utils.h"
 #include "VulkanContext.h"
+#include "VulkanSwapchain.h"
+#include "VulkanUtils.h"
 
 /*
  static const int c_MaxFramesInFlight = 2;
@@ -588,52 +590,68 @@ static void SetupVulkan()
 
 */
 
+static const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+
 namespace vkc
 {
+    uint32_t MaxFramesInFlight;
+    uint32_t CurrentFrame;
+
+    Swapchain GSwapchain;
+
+    // Synchronization primitives. One of a type per frame in flight
+    std::vector<VkFence> FrameFences;
+    std::vector<VkSemaphore> ImageAvailableSemaphores;
+    std::vector<VkSemaphore> RenderFinishedSemaphores;
+
+
     void Init(GLFWwindow* window)
     {
-        Window = window;
-
         Context::Create(window);
+
+        CurrentFrame = 0;
+        MaxFramesInFlight = MAX_FRAMES_IN_FLIGHT;
+        GSwapchain = SwapchainBuilder{}.Build();
+
+        FrameFences.resize(MaxFramesInFlight);
+        ImageAvailableSemaphores.resize(MaxFramesInFlight);
+        RenderFinishedSemaphores.resize(MaxFramesInFlight);
+
+        CreateFences(FrameFences.data(), MaxFramesInFlight);
+        CreateSemaphores(ImageAvailableSemaphores.data(), MaxFramesInFlight);
+        CreateSemaphores(RenderFinishedSemaphores.data(), MaxFramesInFlight);
     }
 
     void Shutdown()
     {
+        for (size_t i = 0; i < MaxFramesInFlight; i++)
+        {
+            vkDestroySemaphore(Context::GetDevice(), ImageAvailableSemaphores[i], Context::GetAllocator());
+            vkDestroySemaphore(Context::GetDevice(), RenderFinishedSemaphores[i], Context::GetAllocator());
+            vkDestroyFence(Context::GetDevice(), FrameFences[i], Context::GetAllocator());
+        }
+
         Context::Destroy();
     }
 
     void BeginFrame()
     {
+        Context::StartFrame();
 
+        if(GSwapchain.AcquireNextImage(ImageAvailableSemaphores[CurrentFrame]))
+        {
+            // Recreate swapchain and stuff
+        }
     }
 
     void EndFrame()
     {
-        VkPresentInfoKHR presentInfo{};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
-
-        VkSwapchainKHR swapchains[] = { vkc::WindowData.Swapchain };
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = swapchains;
-        presentInfo.pImageIndices = &imageIndex;
-        presentInfo.pResults = nullptr;
-
-        VkResult result = vkQueuePresentKHR(PresentationQueue, &presentInfo);
-
-        // Check for swapchain result
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || SwapChainRebuild)
+        if (GSwapchain.PresentImage(RenderFinishedSemaphores[CurrentFrame]))
         {
-            SwapChainRebuild = false;
-            RecreateSwapChain();
-        }
-        else if (result != VK_SUCCESS)
-        {
-            Error("Failed to present swap chain image.");
+            // Recreate swapchain and stuff
         }
 
-        m_CurrentFrame = (m_CurrentFrame + 1) % c_MaxFramesInFlight;
+        Context::EndFrame();
     }
 
 

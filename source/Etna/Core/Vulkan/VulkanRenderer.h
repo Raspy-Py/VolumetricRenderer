@@ -1,7 +1,7 @@
 /*
  * Main Vulkan render subsystem file.
  * Whole system should function as a "black box"
- * executing clients requests.
+ * executing client's requests.
  */
 
 #ifndef VULKANRENDERER_H
@@ -14,28 +14,6 @@ namespace vkc
     /*
      * Vulkan context data
      */
-
-    VkInstance              Instance = VK_NULL_HANDLE;
-    VkPhysicalDevice        PhysicalDevice = VK_NULL_HANDLE;
-    VkDevice                Device = VK_NULL_HANDLE;
-
-    VkQueue                 GraphicsQueue = VK_NULL_HANDLE;
-    VkQueue                 TransferQueue = VK_NULL_HANDLE;
-    VkQueue                 PresentationQueue = VK_NULL_HANDLE;
-
-    VkDescriptorPool        ImGuiFontDescriptorPool = VK_NULL_HANDLE;
-
-    uint32_t                FrameCount;
-    uint32_t                FrameIndex;
-    QueueFamilyIndices      QueueIndices;
-
-    int                     MinImageCount = 2;
-    bool                    SwapChainRebuild = false;
-
-    GLFWwindow*             Window = nullptr;
-
-    // Dynamic data
-    SurfaceWindowData       WindowData;
 
 
     void Init(GLFWwindow* window);
