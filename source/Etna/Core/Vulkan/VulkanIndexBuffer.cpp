@@ -1,6 +1,6 @@
 #include "VulkanIndexBuffer.h"
 
-#include "VulkanUtils.h"
+#include "VulkanCore.h"
 #include "VulkanContext.h"
 
 namespace vkc
@@ -36,7 +36,7 @@ namespace vkc
         /*
          * Index buffer uses device local memory, which is not visible to the CPU,
          * so it can't be written from it. To put some data into this buffer, we create
-         * special host visible staging buffer, fill it and then transfer it's contains
+         * special host visible staging buffer, fill it and then transfer it's contents
          * into the index buffer.
          */
 

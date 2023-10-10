@@ -41,6 +41,12 @@ namespace vkc
         return *Singleton;
     }
 
+    void Context::StartFrame()
+    {}
+
+    void Context::EndFrame()
+    {}
+
     VkInstance Context::GetInstance()
     {
         return Get().GInstance.Handle;
@@ -75,4 +81,18 @@ namespace vkc
         return Get().GWindow;
     }
 
+    VkQueue Context::GetTransferQueue()
+    {
+        return Get().GDevice.TransferQueue;
+    }
+
+    VkQueue Context::GetGraphicsQueue()
+    {
+        return Get().GDevice.GraphicsQueue;
+    }
+
+    VkQueue Context::GetPresentationQueue()
+    {
+        return Get().GDevice.PresentationQueue;
+    }
 }

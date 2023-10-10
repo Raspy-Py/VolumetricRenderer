@@ -7,7 +7,7 @@
 #include <vector>
 #include <string>
 
-#if defined(LOGGING) || !defined(NDEBUG)
+#if defined(LOGGING) || defined(_DEBUG)
 	#define ENABLE_LOGGING 1
 #else
 	#define ENABLE_LOGGING 0
@@ -31,11 +31,16 @@
 #else
 	#define CheckVK(exp)		exp
 #endif
+
+/*
+ * Attributes
+ */
+
+#define UNUSED(x) (void)(x)
+
 // Set loguru configurations
 void LogsInit();
 
 // Read binary file
 void ReadFile(const std::string& filename, std::vector<char>& buffer);
 
-// Yeah, creates shader module from byte code
-VkShaderModule CreateShaderModule(const std::vector<char>& code);

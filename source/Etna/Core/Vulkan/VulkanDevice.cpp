@@ -1,6 +1,6 @@
 #include "VulkanDevice.h"
 
-#include "VulkanUtils.h"
+#include "VulkanCore.h"
 #include "VulkanContext.h"
 #include "Etna/Core/Utils.h"
 
@@ -67,9 +67,9 @@ namespace vkc
         {
             QueueFamilyIndices indices = GetQueueFamilies(device.Physical, surface);
             std::set<uint32_t> queueFamilyIndices = {
-                indices.graphicsFamily.value(),
-                indices.presentationFamily.value(),
-                indices.transferFamily.value()
+                indices.GraphicsFamily.value(),
+                indices.PresentationFamily.value(),
+                indices.TransferFamily.value()
             };
             std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
@@ -102,9 +102,9 @@ namespace vkc
                 Error("Failed to create a logical device.");
             }
 
-            vkGetDeviceQueue(device.Logical, indices.transferFamily.value(), 0, &device.TransferQueue);
-            vkGetDeviceQueue(device.Logical, indices.graphicsFamily.value(), 0, &device.GraphicsQueue);
-            vkGetDeviceQueue(device.Logical, indices.presentationFamily.value(), 0, &device.PresentationQueue);
+            vkGetDeviceQueue(device.Logical, indices.TransferFamily.value(), 0, &device.TransferQueue);
+            vkGetDeviceQueue(device.Logical, indices.GraphicsFamily.value(), 0, &device.GraphicsQueue);
+            vkGetDeviceQueue(device.Logical, indices.PresentationFamily.value(), 0, &device.PresentationQueue);
         }
 
         return device;
@@ -139,7 +139,7 @@ namespace vkc
         {
             SwapChainSupportDetails swapChainDetails{};
             GetSwapChainSupportDetails(swapChainDetails, device, surface);
-            swapChainAdequate = !swapChainDetails.formats.empty() && !swapChainDetails.presentModes.empty();
+            swapChainAdequate = !swapChainDetails.Formats.empty() && !swapChainDetails.PresentModes.empty();
         }
 
         return extensionsSupported && swapChainAdequate && indices.IsValid();

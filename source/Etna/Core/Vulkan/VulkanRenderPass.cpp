@@ -1,5 +1,7 @@
 #include "VulkanRenderPass.h"
 
+#include "Etna/Core/Utils.h"
+
 #include <array>
 #include <stdexcept>
 
@@ -23,6 +25,7 @@ namespace vkc
         subpassDescription.pColorAttachments = &colorReference;
 
         std::vector<VkAttachmentDescription> attachments = {{
+            .flags = 0,
             .format = RenderTargetFormat,
             .samples = VK_SAMPLE_COUNT_1_BIT,
             .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -37,7 +40,8 @@ namespace vkc
         if (DepthEnabled)
         {
             attachments.push_back({
-                .format = findDepthFormat(),
+                .flags = 0,
+                .format = FindDepthFormat(),
                 .samples = VK_SAMPLE_COUNT_1_BIT,
                 .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
                 .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
@@ -53,7 +57,6 @@ namespace vkc
             };
 
             subpassDescription.pDepthStencilAttachment = &depthReference;
-
         }
 
         // Subpass dependencies for layout transitions
@@ -83,6 +86,8 @@ namespace vkc
 
         VkRenderPassCreateInfo renderPassInfo = {
             .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
             .attachmentCount = static_cast<uint32_t>(attachments.size()),
             .pAttachments = attachments.data(),
             .subpassCount = 1,
@@ -94,9 +99,8 @@ namespace vkc
         vkc::RenderPass renderPass;
         if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass.Handle) != VK_SUCCESS)
         {
-            throw std::runtime_error("failed to create render pass!");
+            Error("Failed to create render pass.");
         }
-
 
         return renderPass;
     }

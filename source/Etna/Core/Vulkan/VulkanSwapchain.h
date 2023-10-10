@@ -28,6 +28,10 @@ namespace vkc
         bool AcquireNextImage(VkSemaphore semaphore);
         bool PresentImage(VkSemaphore semaphore);
 
+        VkFormat GetFormat() const;
+        VkExtent2D GetExtent() const;
+        const std::vector<VkImageView>& GetImageViews() const;
+
     public:
         uint32_t ImageCount;
         uint32_t CurrentImage;

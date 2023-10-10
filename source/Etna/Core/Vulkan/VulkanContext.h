@@ -22,24 +22,31 @@ namespace vkc
         static void Destroy();
         static Context &Get();
 
+        static void StartFrame();
+        static void EndFrame();
+
     public:
-        static VkInstance GetInstance();
-        static VkDevice GetDevice();
-        static VkPhysicalDevice GetPhysicalDevice();
-        static VkSurfaceKHR GetSurface();
-        static VkAllocationCallbacks* GetAllocator();
-        static GLFWwindow* GetWindow();
+        static VkInstance               GetInstance();
+        static VkDevice                 GetDevice();
+        static VkPhysicalDevice         GetPhysicalDevice();
+        static VkSurfaceKHR             GetSurface();
+        static VkAllocationCallbacks*   GetAllocator();
+        static GLFWwindow*              GetWindow();
+
+        static VkQueue GetTransferQueue();
+        static VkQueue GetGraphicsQueue();
+        static VkQueue GetPresentationQueue();
 
     private:
-        Instance GInstance;
-        Surface GSurface;
-        Device GDevice;
-
-        DebugMessenger GDebugMessenger;
-        GLFWwindow* GWindow;
+        Context() = default;
 
     private:
-        Context();
+        Instance    GInstance;
+        Surface     GSurface;
+        Device      GDevice;
+
+        DebugMessenger  GDebugMessenger;
+        GLFWwindow*     GWindow;
 
     private:
         static Context *Singleton;

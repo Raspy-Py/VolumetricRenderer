@@ -1,26 +1,17 @@
 #ifndef VULKANRENDERPASS_H
 #define VULKANRENDERPASS_H
 
-#include "VulkanHeader.h"
+#include "VulkanCore.h"
 #include "VulkanAttachment.h"
 
 #include <vector>
 
 namespace vkc
 {
-    enum class RenderPassType
-    {
-        Graphic,
-        Compute,
-        None,
-        Count
-    };
-
     class RenderPass
     {
     public:
         VkRenderPass Handle;
-
     };
 
     class RenderPassBuilder
@@ -33,14 +24,14 @@ namespace vkc
          * Compulsory parameters
          */
 
-        RenderPassBuilder& SetRTFormat(VkFormat format) { RenderTargetFormat = format; }
+        RenderPassBuilder& SetRTFormat(VkFormat format) { RenderTargetFormat = format; return *this; }
 
         /*
          * Optional parameters
          */
 
-        RenderPassBuilder& SetType(RenderPassType type) { Type = type; }
-        RenderPassBuilder& AddDepthBuffer()             { DepthEnabled = true; }
+        RenderPassBuilder& SetType(RenderPassType type) { Type = type; return *this; }
+        RenderPassBuilder& AddDepthBuffer()             { DepthEnabled = true; return *this; }
 
         RenderPass Build(VkDevice device);
 

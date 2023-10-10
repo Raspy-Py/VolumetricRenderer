@@ -1,7 +1,7 @@
 #include "VulkanDebugMessenger.h"
 
 #include "Etna/Core/Utils.h"
-#include "VulkanUtils.h"
+#include "VulkanCore.h"
 #include "VulkanContext.h"
 
 namespace vkc

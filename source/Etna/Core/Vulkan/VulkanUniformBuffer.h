@@ -1,14 +1,14 @@
 #ifndef VULKANUNIFORMBUFFER_H
 #define VULKANUNIFORMBUFFER_H
 
-#include "VulkanHeader.h"
+#include "VulkanCore.h"
 
 #include <vector>
 
 namespace vkc
 {
     template <class T>
-    class UniformBuffer
+    class UniformBuffer : public DescriptiveBufferInterface
     {
     public:
         UniformBuffer(uint32_t count = 1);
@@ -20,6 +20,12 @@ namespace vkc
         void Update(const T* data, uint32_t index = 0);
 
     public:
+        // From DescriptiveBufferInterface
+
+        VkDescriptorSetLayout CreateDescriptorSetLayout(uint32_t binding, ShaderStage shaderStage) override;
+        std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorSetLayout layout, vkc::DescriptorPool pool) override;
+
+    public:
         // Vulkan supports several frames in flight,
         // so we need multiple of these boys - one per frame, to avoid data race
 
@@ -29,7 +35,5 @@ namespace vkc
         // VRAM mapping on the CPU to update data in the VkBuffer via memcpy
         std::vector<void*> HostMappings;
     };
-
-
 }
 #endif //VULKANUNIFORMBUFFER_H

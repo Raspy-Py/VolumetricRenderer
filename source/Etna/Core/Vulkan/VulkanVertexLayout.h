@@ -1,21 +1,22 @@
 #ifndef VULKANVERTEXLAYOUT_H
 #define VULKANVERTEXLAYOUT_H
 
+#include "Etna/Core/Utils.h"
 #include "VulkanHeader.h"
 #include <vector>
 
-
-#define DEFINE_VERTEX_ATTRIBUTE_TYPE(data_type, vk_format)                                          \
-    uint32_t AddAttribute(VertexLayout& layout, Tag<data_type>, uint32_t binding, uint32_t offset)  \
-    {                                                                                               \
-        layout.AttributeDescriptions.push_back({                                                    \
-            .location = static_cast<uint32_t>(layout.AttributeDescriptions.size()),                 \
-            .binding = binding,                                                                     \
-            .format = vk_format,                                                                    \
-            .offset = offset                                                                        \
-        });                                                                                         \
-                                                                                                    \
-        return offset + sizeof(data_type);                                                          \
+#define DEFINE_VERTEX_ATTRIBUTE_TYPE(data_type, vk_format)                                              \
+    uint32_t AddAttribute(VertexLayout& layout, Tag<data_type> tag, uint32_t binding, uint32_t offset)  \
+    {                                                                                                   \
+    UNUSED(tag);                                                                                        \
+    layout.AttributeDescriptions.push_back({                                                            \
+            .location = static_cast<uint32_t>(layout.AttributeDescriptions.size()),                     \
+            .binding = binding,                                                                         \
+            .format = vk_format,                                                                        \
+            .offset = offset                                                                            \
+        });                                                                                             \
+                                                                                                        \
+        return offset + sizeof(data_type);                                                              \
     }
 
 
@@ -50,7 +51,13 @@ namespace vkc
     DEFINE_VERTEX_ATTRIBUTE_TYPE(glm::dvec2, VK_FORMAT_R64G64_SFLOAT)
     DEFINE_VERTEX_ATTRIBUTE_TYPE(double, VK_FORMAT_R64_SFLOAT)
 
-    // I bet there is a way to make it runtime dynamic...
+    /*
+     * Usage:
+     *      auto layout = CreateVertexLayout<VertexAttributeType1,
+     *                                      VertexAttributeType2,
+     *                                      ...
+     *                                      VertexAttributeTypeN>();
+     */
     template<typename ...Attributes>
     VertexLayout CreateVertexLayout(uint32_t binding = 0)
     {

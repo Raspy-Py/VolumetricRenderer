@@ -3,7 +3,7 @@
 #include "Etna/Core/Utils.h"
 #include "VulkanContext.h"
 #include "VulkanSwapchain.h"
-#include "VulkanUtils.h"
+#include "VulkanCore.h"
 
 /*
  static const int c_MaxFramesInFlight = 2;
@@ -604,6 +604,9 @@ namespace vkc
     std::vector<VkSemaphore> ImageAvailableSemaphores;
     std::vector<VkSemaphore> RenderFinishedSemaphores;
 
+    // Command pools
+    VkCommandPool GraphicsCommandPool;
+    VkCommandPool TransferCommandPool;
 
     void Init(GLFWwindow* window)
     {
@@ -620,6 +623,10 @@ namespace vkc
         CreateFences(FrameFences.data(), MaxFramesInFlight);
         CreateSemaphores(ImageAvailableSemaphores.data(), MaxFramesInFlight);
         CreateSemaphores(RenderFinishedSemaphores.data(), MaxFramesInFlight);
+
+        auto indices = GetQueueFamilies(Context::GetPhysicalDevice(), Context::GetSurface());
+        GraphicsCommandPool = CreateCommandPool(indices.GraphicsFamily.value());
+        TransferCommandPool = CreateCommandPool(indices.TransferFamily.value());
     }
 
     void Shutdown()
@@ -641,6 +648,7 @@ namespace vkc
         if(GSwapchain.AcquireNextImage(ImageAvailableSemaphores[CurrentFrame]))
         {
             // Recreate swapchain and stuff
+            return;
         }
     }
 
@@ -649,8 +657,10 @@ namespace vkc
         if (GSwapchain.PresentImage(RenderFinishedSemaphores[CurrentFrame]))
         {
             // Recreate swapchain and stuff
+            return;
         }
 
+        CurrentFrame = (CurrentFrame + 1) % MaxFramesInFlight;
         Context::EndFrame();
     }
 
