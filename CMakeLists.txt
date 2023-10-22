@@ -35,9 +35,10 @@ set(LAYERS  ${SOURCE}/Etna/Layers)
 add_executable(${PROJECT_NAME}
     # - Source
     # -- Files you might wanna look at
-    ${SOURCE}/EtnaApplication.cpp
-    ${SOURCE}/Etna/Core/EntryPoint.cpp
-    ${CORE}/Etna.h         ${CORE}/Etna.cpp
+    #${SOURCE}/EtnaApplication.cpp
+    #${SOURCE}/Etna/Core/EntryPoint.cpp
+    ${SOURCE}/Etna/TestMain.cpp
+    #${CORE}/Etna.h         ${CORE}/Etna.cpp
     ${CORE}/Utils.h        ${CORE}/Utils.cpp
     ${CORE}/Clock.h        ${CORE}/Clock.cpp
     ${CORE}/Exception.h    ${CORE}/Exception.cpp
@@ -46,7 +47,8 @@ add_executable(${PROJECT_NAME}
     ${LAYERS}/Canvas/Canvas.h     ${LAYERS}/Canvas/Canvas.cpp
     # -- Vulkan render subsystem
     ${VULKAN}/VulkanHeader.h
-    ${VULKAN}/VulkanVertexLayout.h
+    ${VULKAN}/VulkanVertexBuffer.h
+    ${VULKAN}/VulkanVertexLayout.h    ${VULKAN}/VulkanVertexLayout.cpp
     ${VULKAN}/VulkanAttachment.h      ${VULKAN}/VulkanAttachment.cpp
     ${VULKAN}/VulkanContext.h         ${VULKAN}/VulkanContext.cpp
     ${VULKAN}/VulkanCore.h            ${VULKAN}/VulkanCore.cpp
@@ -62,7 +64,6 @@ add_executable(${PROJECT_NAME}
     ${VULKAN}/VulkanSurface.h         ${VULKAN}/VulkanSurface.cpp
     ${VULKAN}/VulkanSwapchain.h       ${VULKAN}/VulkanSwapchain.cpp
     ${VULKAN}/VulkanUniformBuffer.h   ${VULKAN}/VulkanUniformBuffer.cpp
-    ${VULKAN}/VulkanVertexBuffer.h    ${VULKAN}/VulkanVertexBuffer.cpp
     ${VULKAN}/VulkanVertexShader.h    ${VULKAN}/VulkanVertexShader.cpp
     ${VULKAN}/VulkanShader.h          ${VULKAN}/VulkanShader.cpp
     ${VULKAN}/VulkanShader.h          ${VULKAN}/VulkanShader.cpp
