@@ -4,7 +4,6 @@
 #include "imgui/imgui.h"
 
 #include <set>
-#include <limits>
 
 namespace vkc
 {
@@ -22,7 +21,9 @@ namespace vkc
         Singleton->GWindow = window;
         // Don't change initialization order!
         Singleton->GInstance = InstanceBuilder{}.Build();
+#ifdef _DEBUG
         Singleton->GDebugMessenger = DebugMessengerBuilder{}.Build();
+#endif
         Singleton->GSurface = SurfaceBuilder{}
             .SetWindow(window)
             .Build();

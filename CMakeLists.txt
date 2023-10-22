@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.22)
 set(PROJECT_NAME VolumetricRenderer)
 project(${PROJECT_NAME} C CXX)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -DVK_PROTOTYPES")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -DVK_PROTOTYPES")
+
 set(CMAKE_CXX_STANDARD 20)
 set(WARNINGS_AS_ERRORS OFF)
 set(ENABLE_PVS_STUDIO OFF)
@@ -96,23 +99,31 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${SOURCE})
 # Vendor
 ##########################################################
 
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "F" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-
-find_package(Vulkan REQUIRED)
-find_package(glfw3 3.3 REQUIRED)
-
 target_include_directories(${PROJECT_NAME}
-    PUBLIC ${Vulkan_INCLUDE_DIR}
-    PUBLIC ${GLFW_INCLUDE_DIRS}
     PUBLIC ${VENDOR}
 )
 
-target_link_libraries(${PROJECT_NAME}
-    ${Vulkan_LIBRARIES}
-    glfw
-)
+# GLFW
+set(GLFW_DIR ${VENDOR}/glfw) # Set this to point to an up-to-date GLFW repo
+option(GLFW_BUILD_EXAMPLES "Build the GLFW example programs" OFF)
+option(GLFW_BUILD_TESTS "Build the GLFW test programs" OFF)
+option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
+option(GLFW_INSTALL "Generate installation target" OFF)
+option(GLFW_DOCUMENT_INTERNALS "Include internals in documentation" OFF)
+add_subdirectory(${GLFW_DIR} bin EXCLUDE_FROM_ALL)
+include_directories(${GLFW_DIR}/include)
+
+# Libraries
+find_package(Vulkan REQUIRED)
+set(LIBRARIES "glfw;Vulkan::Vulkan")
+
+# Use vulkan headers from glfw:
+target_include_directories(${PROJECT_NAME}
+        PUBLIC ${GLFW_DIR}/deps
+        PUBLIC ${VENDOR})
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+target_compile_definitions(${PROJECT_NAME} PUBLIC -DImTextureID=ImU64)
+
 
 ##########################################################
 # Fixed CMakeLists.txt part
@@ -129,11 +140,6 @@ SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-
-###
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
-###
 
 # Include CMake setup
 include(cmake/main-config.cmake)

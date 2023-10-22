@@ -28,6 +28,7 @@ namespace vkc
         {
             instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
+        instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 
         return instanceExtensions;
     }
@@ -99,7 +100,7 @@ namespace vkc
         // Checking whether requested validation layers are available
         if (EnableValidationLayers && !CheckValidationLayersSupport())
         {
-            Error("Some validation layers are requsted, but not available!");
+            Error("Some validation layers are requested, but not available!");
         }
 
         // Application information
@@ -139,7 +140,7 @@ namespace vkc
             createInfo.ppEnabledLayerNames = nullptr;
         }
 
-        Instance instance;
+        Instance instance{};
         if (vkCreateInstance(&createInfo, nullptr, &instance.Handle) != VK_SUCCESS)
         {
             Error("Failed to create a Vulkan instance.");

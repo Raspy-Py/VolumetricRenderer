@@ -3,9 +3,13 @@
 
 #include "VulkanCore.h"
 #include "VulkanVertexLayout.h"
+#include "VulkanBindableInterface.h"
 
 #include <string>
 #include <vector>
+
+// TODO: "Builder" pattern is absolutely redundant here.
+//  Move it to Pipeline's constructor
 
 namespace vkc
 {
@@ -19,11 +23,13 @@ namespace vkc
         ::std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
     };
 
-    class Pipeline
+    class Pipeline : public BindableInterface
     {
     public:
         Pipeline() = default;
-        ~Pipeline() = default;
+        ~Pipeline() override = default;
+
+        void Bind(VkCommandBuffer commandBuffer, uint32_t imageIndex = 0) override;
 
     public:
         VkPipeline Handle;
@@ -37,13 +43,14 @@ namespace vkc
         ~PipelineBuilder() = default;
 
         PipelineBuilder& SetVertexLayout(const vkc::VertexLayout& vertexLayout);
-        PipelineBuilder& SetVertexShader(std::string& path);
-        PipelineBuilder& SetFragmentShader(std::string& path);
+        PipelineBuilder& SetVertexShader(const std::string& path);
+        PipelineBuilder& SetFragmentShader(const std::string& path);
         PipelineBuilder& SetRenderPass(VkRenderPass renderPass);
         PipelineBuilder& AddDescriptorSetLayout(VkDescriptorSetLayout layout);
         PipelineBuilder& AddPushConstantRange(VkPushConstantRange range);
         
         Pipeline Build();
+
 
     private:
         VkRenderPass RenderPass;

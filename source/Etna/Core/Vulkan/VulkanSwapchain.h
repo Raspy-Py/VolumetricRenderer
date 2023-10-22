@@ -28,16 +28,17 @@ namespace vkc
         bool AcquireNextImage(VkSemaphore semaphore);
         bool PresentImage(VkSemaphore semaphore);
 
-        VkFormat GetFormat() const;
-        VkExtent2D GetExtent() const;
-        const std::vector<VkImageView>& GetImageViews() const;
-
-    public:
-        uint32_t ImageCount;
-        uint32_t CurrentImage;
+        [[nodiscard]] VkFormat GetFormat() const        { return ImageFormat; }
+        [[nodiscard]] uint32_t GetImageCount() const    { return ImageCount; }
+        [[nodiscard]] uint32_t GetCurrentImage() const  { return CurrentImage; }
+        [[nodiscard]] VkExtent2D GetExtent() const      { return Extent; }
+        [[nodiscard]] const std::vector<VkImageView>& GetImageViews() const { return ImageViews; }
 
     private:
         VkSwapchainKHR Handle;
+
+        uint32_t ImageCount;
+        uint32_t CurrentImage;
         VkFormat ImageFormat;
         VkExtent2D Extent;
         std::vector<VkImage> Images;

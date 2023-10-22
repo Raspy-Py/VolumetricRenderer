@@ -53,6 +53,7 @@ namespace Etna
         Clock DeltaClock;
         ApplicationInfo AppInfo;
 
+        // Staging queue to control Layers' initialization time
         std::queue<std::shared_ptr<Layer>> PushQueue;
         std::vector<std::shared_ptr<Layer>> Layers;
     };

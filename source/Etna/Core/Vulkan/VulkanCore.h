@@ -13,10 +13,9 @@ namespace vkc
      */
     enum class RenderPassType : int
     {
-        Graphic,
-        Compute,
-        None,
-        Count
+        Graphic = 0,
+        Compute = 1,
+        MaxEnum = 0x7FFFFFFF,
     };
 
     enum class ShaderStage : int
@@ -78,7 +77,8 @@ namespace vkc
 
     struct DescriptorPool
     {
-        DescriptorPool(DescriptorType type, uint32_t maxSets);
+        /// Set free to true to allow vkFreeDescriptorSets(...)
+        DescriptorPool(DescriptorType type, uint32_t maxSets, bool free = false);
         ~DescriptorPool();
 
         DescriptorType Type;
@@ -182,9 +182,9 @@ namespace vkc
     void CreateFramebuffers(
         VkFramebuffer*  framebuffers,
         VkRenderPass    renderPass, 
-        VkExtent2D      extent, 
-        VkImageView*    colorAttachments,
-        VkImageView*    depthAttachments = nullptr,
+        VkExtent2D      extent,
+        const VkImageView*    colorAttachments,
+        const VkImageView*    depthAttachments = nullptr,
         uint32_t        count = 1);
 }
 

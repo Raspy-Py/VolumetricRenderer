@@ -1,32 +1,41 @@
 #include "VulkanRenderPass.h"
 
 #include "Etna/Core/Utils.h"
+#include "VulkanContext.h"
 
-#include <array>
-#include <stdexcept>
+#include <vector>
 
 namespace vkc
 {
-    RenderPass RenderPassBuilder::Build(VkDevice device)
+    RenderPass::RenderPass(const RenderPassCreateInfo& initInfo)
     {
-        VkSubpassDescription subpassDescription = {};
-        subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpassDescription.colorAttachmentCount = 1;
-        subpassDescription.inputAttachmentCount = 0;
-        subpassDescription.pInputAttachments = nullptr;
-        subpassDescription.preserveAttachmentCount = 0;
-        subpassDescription.pPreserveAttachments = nullptr;
-        subpassDescription.pResolveAttachments = nullptr;
+        if (initInfo.Type != RenderPassType::Graphic)
+        {
+            Error("Only graphic passes supported.");
+        }
+
+        ClearValues = {
+            {.color = {{0.0f, 0.0f, 0.0f, 1.0f}}}
+        };
+        if (initInfo.DepthEnabled)
+        {
+            ClearValues.push_back(
+                {.depthStencil = {1.0f, 0}}
+            );
+        }
 
         // Color attachment
         VkAttachmentReference colorReference = {};
         colorReference.attachment = 0;
         colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpassDescription = {};
+        subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpassDescription.pColorAttachments = &colorReference;
 
         std::vector<VkAttachmentDescription> attachments = {{
             .flags = 0,
-            .format = RenderTargetFormat,
+            .format = initInfo.TargetFormat,
             .samples = VK_SAMPLE_COUNT_1_BIT,
             .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
             .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
@@ -37,7 +46,7 @@ namespace vkc
         }};
 
         // Depth attachment
-        if (DepthEnabled)
+        if (initInfo.DepthEnabled)
         {
             attachments.push_back({
                 .flags = 0,
@@ -71,7 +80,7 @@ namespace vkc
         }};
 
         // Depth dependency
-        if (DepthEnabled)
+        if (initInfo.DepthEnabled)
         {
             dependencies.push_back({
                 .srcSubpass = 0,
@@ -96,12 +105,37 @@ namespace vkc
             .pDependencies = dependencies.data(),
         };
 
-        vkc::RenderPass renderPass;
-        if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass.Handle) != VK_SUCCESS)
+        if (vkCreateRenderPass(Context::GetDevice(), &renderPassInfo, Context::GetAllocator(), &Handle) != VK_SUCCESS)
         {
             Error("Failed to create render pass.");
         }
 
-        return renderPass;
+        RenderPipeline = PipelineBuilder{}
+            .SetRenderPass(Handle)
+            .SetVertexLayout(initInfo.VertexLayoutInfo)
+            .SetVertexShader(initInfo.VertexShaderPath)
+            .SetFragmentShader(initInfo.FragmentShaderPath)
+            .AddDescriptorSetLayout(initInfo.DescriptorSetLayout)
+            .Build();
+    }
+
+    void RenderPass::Begin(VkCommandBuffer commandBuffer, VkFramebuffer framebuffer, VkRect2D renderArea)
+    {
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = Handle;
+        renderPassInfo.framebuffer = framebuffer;
+        renderPassInfo.renderArea = renderArea;
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(ClearValues.size());
+        renderPassInfo.pClearValues = ClearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        RenderPipeline.Bind(commandBuffer);
+    }
+
+    void RenderPass::End(VkCommandBuffer commandBuffer)
+    {
+        vkCmdEndRenderPass(commandBuffer);
     }
 }

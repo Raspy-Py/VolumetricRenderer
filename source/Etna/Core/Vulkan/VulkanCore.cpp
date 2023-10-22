@@ -47,7 +47,7 @@ namespace vkc
  */
 namespace vkc
 {
-    DescriptorPool::DescriptorPool(vkc::DescriptorType type, uint32_t maxSets)
+    DescriptorPool::DescriptorPool(vkc::DescriptorType type, uint32_t maxSets, bool free)
     {
         VkDescriptorPoolSize poolSize{};
         poolSize.type = static_cast<VkDescriptorType>(type);
@@ -58,6 +58,10 @@ namespace vkc
         poolInfo.poolSizeCount = 1;
         poolInfo.pPoolSizes = &poolSize;
         poolInfo.maxSets = maxSets;
+        if (free)
+        {
+            poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        }
 
         if (vkCreateDescriptorPool(Context::GetDevice(), &poolInfo, Context::GetAllocator(), &Handle) != VK_SUCCESS)
         {
@@ -99,7 +103,7 @@ namespace vkc
 
     void AllocateDescriptorSets(
         VkDescriptorSetLayout   layout,
-        VkDescriptorPool     pool,
+        VkDescriptorPool        pool,
         VkDescriptorSet*        sets,
         uint32_t                count)
     {
@@ -116,8 +120,12 @@ namespace vkc
         }
     }
 
+    // Bind descriptor sets to certain buffers
     template <typename BufferObjectType>
-    void UpdateBufferDescriptorSets(VkBuffer* buffers, VkDescriptorSet* sets, uint32_t count)
+    void UpdateBufferDescriptorSets(
+        VkBuffer*           buffers,
+        VkDescriptorSet*    sets,
+        uint32_t            count)
     {
         for (size_t i = 0; i < count; i++)
         {
@@ -142,6 +150,7 @@ namespace vkc
         }
     }
 
+    // Bind descriptor sets to certain images
     void UpdateImageDescriptorSets(VkSampler* samplers, VkImageView* views, VkImageLayout* layouts, VkDescriptorSet* sets, uint32_t count)
     {
         for (size_t i = 0; i < count; i++)
@@ -258,7 +267,7 @@ namespace vkc
         VkCommandPool commandPool;
         if (vkCreateCommandPool(Context::GetDevice(), &commandPoolInfo, Context::GetAllocator(), &commandPool) != VK_SUCCESS)
         {
-            Error("Failed to create graphics command pool.");
+            Error("Failed to create command pool.");
         }
 
         return commandPool;
@@ -464,10 +473,10 @@ namespace vkc
 
     void CreateFramebuffers(
         VkFramebuffer*  framebuffers,
-        VkRenderPass    renderPass, 
+        VkRenderPass    renderPass,
         VkExtent2D      extent, 
-        VkImageView*    colorAttachments,
-        VkImageView*    depthAttachments,
+        const VkImageView*    colorAttachments,
+        const VkImageView*    depthAttachments,
         uint32_t        count)
     {
         std::vector<VkImageView> attachments(1);

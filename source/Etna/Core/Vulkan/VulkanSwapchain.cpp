@@ -54,20 +54,28 @@ namespace vkc
         return false;
     }
 
+    SwapchainBuilder& SwapchainBuilder::SetOldSwapchain(vkc::Swapchain *oldSwapchain)
+    {
+        OldSwapChain = oldSwapchain;
+        return *this;
+    }
+
     Swapchain SwapchainBuilder::Build()
     {
+        auto device = Context::GetDevice();
+        auto allocator = Context::GetAllocator();
+
         // Cleanup old swapchain
         if (OldSwapChain != nullptr)
         {
-            auto device = Context::GetDevice();
             vkDeviceWaitIdle(device);
 
-            for (size_t i = 0; i < OldSwapChain->ImageViews.size(); i++)
+            for (auto& imageView : OldSwapChain->ImageViews)
             {
-                vkDestroyImageView(device, OldSwapChain->ImageViews[i], Context::GetAllocator());
+                vkDestroyImageView(device, imageView, allocator);
             }
 
-            vkDestroySwapchainKHR(device, OldSwapChain->Handle, Context::GetAllocator());
+            vkDestroySwapchainKHR(device, OldSwapChain->Handle, allocator);
         }
 
         SwapChainSupportDetails swapChainSupport{};
@@ -117,17 +125,17 @@ namespace vkc
         createInfo.oldSwapchain = VK_NULL_HANDLE;
 
         Swapchain swapchain;
-        if (vkCreateSwapchainKHR(Context::GetDevice(), &createInfo, Context::GetAllocator(), &swapchain.Handle) != VK_SUCCESS)
+        if (vkCreateSwapchainKHR(device, &createInfo, allocator, &swapchain.Handle) != VK_SUCCESS)
         {
             Error("Failed to create swapchain.");
         }
 
         swapchain.ImageCount = 0;
         swapchain.CurrentImage = 0;
-        vkGetSwapchainImagesKHR(Context::GetDevice(), swapchain.Handle, &swapchain.ImageCount, nullptr);
+        vkGetSwapchainImagesKHR(device, swapchain.Handle, &swapchain.ImageCount, nullptr);
 
         swapchain.Images.resize(swapchain.ImageCount);
-        vkGetSwapchainImagesKHR(Context::GetDevice(), swapchain.Handle, &swapchain.ImageCount, swapchain.Images.data());
+        vkGetSwapchainImagesKHR(device, swapchain.Handle, &swapchain.ImageCount, swapchain.Images.data());
 
         swapchain.ImageFormat = surfaceFormat.format;
         swapchain.Extent = extent;
@@ -186,8 +194,6 @@ namespace vkc
 
             return actualExtent;
         }
-
-        return VkExtent2D();
     }
 
     void SwapchainBuilder::CreateImageViews(vkc::Swapchain &swapchain)

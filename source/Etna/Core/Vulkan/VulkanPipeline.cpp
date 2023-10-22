@@ -24,45 +24,44 @@ namespace vkc
 		VK_DYNAMIC_STATE_SCISSOR
 	};
 
+    void Pipeline::Bind(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+    {
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Handle);
+    }
+
     PipelineBuilder& PipelineBuilder::SetVertexLayout(const vkc::VertexLayout& vertexLayout)
     {
         this->VertexLayoutInfo = vertexLayout;
-
         return *this;
     }
 
-    PipelineBuilder& PipelineBuilder::SetVertexShader(std::string& path)
+    PipelineBuilder& PipelineBuilder::SetVertexShader(const std::string& path)
     {
         VertexShaderPath = path;
-        
         return *this;
     }
 
-    PipelineBuilder& PipelineBuilder::SetFragmentShader(std::string& path)
+    PipelineBuilder& PipelineBuilder::SetFragmentShader(const std::string& path)
     {
         FragmentShaderPath = path;
-        
         return *this;
     }
 
     PipelineBuilder& PipelineBuilder::SetRenderPass(VkRenderPass renderPass)
     {
         RenderPass = renderPass;
-        
         return *this;
     }
 
     PipelineBuilder& PipelineBuilder::AddDescriptorSetLayout(VkDescriptorSetLayout layout)
     {
         DescriptorSetLayouts.push_back(layout);
-        
         return *this;
     }
 
     PipelineBuilder& PipelineBuilder::AddPushConstantRange(VkPushConstantRange range)
     {
         PushConstantRanges.push_back(range);
-        
         return *this;
     }
 
@@ -76,7 +75,7 @@ namespace vkc
             fragmentShaderModule.GetShaderStageCreateInfo()
         };
 
-        
+
         VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
         dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(DynamicStates.size());
@@ -154,7 +153,7 @@ namespace vkc
         pipelineLayoutInfo.pSetLayouts = DescriptorSetLayouts.data();
         pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(PushConstantRanges.size());;
         pipelineLayoutInfo.pPushConstantRanges = PushConstantRanges.data();
-        
+
         Pipeline pipeline;
         if (vkCreatePipelineLayout(Context::GetDevice(), &pipelineLayoutInfo, Context::GetAllocator(), &pipeline.Layout) != VK_SUCCESS)
         {

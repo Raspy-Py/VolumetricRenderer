@@ -26,7 +26,7 @@ namespace vkc
         DebugMessenger debugMessenger;
         VkDebugUtilsMessengerCreateInfoEXT createInfo{};
         PopulateDebugMessengerCreateInfo(createInfo);
-        vkCreateDebugUtilsMessenger(Context::GetInstance(), &createInfo, nullptr, &debugMessenger.Handle);
+        vkCreateDebugUtilsMessenger(Context::GetInstance(), &createInfo, Context::GetAllocator(), &debugMessenger.Handle);
         return debugMessenger;
     }
 }
