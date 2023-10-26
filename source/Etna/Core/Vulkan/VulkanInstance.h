@@ -26,7 +26,7 @@ namespace vkc
 
     private:
         std::vector<const char*> GetRequiredExtensions();
-        bool CheckInstanceExtensionsSupport(std::vector<const char*>* requiredExtensions);
+        bool CheckInstanceExtensionsSupport(const std::vector<const char*>* requiredExtensions);
         bool CheckValidationLayersSupport();
     };
 }

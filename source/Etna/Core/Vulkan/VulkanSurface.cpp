@@ -12,8 +12,8 @@ namespace vkc
 
     Surface SurfaceBuilder::Build()
     {
-        Surface surface;
-        if (glfwCreateWindowSurface(Context::GetInstance(), Window, nullptr, &surface.Handle) != VK_SUCCESS)
+        Surface surface{};
+        if (glfwCreateWindowSurface(Context::GetInstance(), Window, Context::GetAllocator(), &surface.Handle) != VK_SUCCESS)
         {
             Error("Failed to create window surface.");
         }

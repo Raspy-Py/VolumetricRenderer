@@ -28,83 +28,19 @@ endif()
 
 include(cmake/CompilerWarnings.cmake)
 
-set(SOURCE  ${CMAKE_SOURCE_DIR}/source)
-set(VENDOR  ${CMAKE_SOURCE_DIR}/vendor)
 # Shortcuts
-set(CORE    ${SOURCE}/Etna/Core)
-set(VULKAN  ${CORE}/Vulkan)
-set(LAYERS  ${SOURCE}/Etna/Layers)
+set(SOURCE_DIR  ${CMAKE_SOURCE_DIR}/source)
+set(VENDOR_DIR  ${CMAKE_SOURCE_DIR}/vendor)
 
-add_executable(${PROJECT_NAME}
-    # - Source
-    # -- Files you might wanna look at
-    #${SOURCE}/EtnaApplication.cpp
-    #${SOURCE}/Etna/Core/EntryPoint.cpp
-    ${SOURCE}/Etna/TestMain.cpp
-    #${CORE}/Etna.h         ${CORE}/Etna.cpp
-    ${CORE}/Utils.h        ${CORE}/Utils.cpp
-    ${CORE}/Clock.h        ${CORE}/Clock.cpp
-    ${CORE}/Exception.h    ${CORE}/Exception.cpp
-    ${CORE}/ImGuiTheme.h   ${CORE}/ImGuiTheme.cpp
-    # -- Application layers
-    ${LAYERS}/Canvas/Canvas.h     ${LAYERS}/Canvas/Canvas.cpp
-    # -- Vulkan render subsystem
-    ${VULKAN}/VulkanHeader.h
-    ${VULKAN}/VulkanVertexBuffer.h
-    ${VULKAN}/VulkanVertexLayout.h    ${VULKAN}/VulkanVertexLayout.cpp
-    ${VULKAN}/VulkanAttachment.h      ${VULKAN}/VulkanAttachment.cpp
-    ${VULKAN}/VulkanContext.h         ${VULKAN}/VulkanContext.cpp
-    ${VULKAN}/VulkanCore.h            ${VULKAN}/VulkanCore.cpp
-    ${VULKAN}/VulkanDebugMessenger.h  ${VULKAN}/VulkanDebugMessenger.cpp
-    ${VULKAN}/VulkanDevice.h          ${VULKAN}/VulkanDevice.cpp
-    ${VULKAN}/VulkanFragmentShader.h  ${VULKAN}/VulkanFragmentShader.cpp
-    ${VULKAN}/VulkanIndexBuffer.h     ${VULKAN}/VulkanIndexBuffer.cpp
-    ${VULKAN}/VulkanInstance.h        ${VULKAN}/VulkanInstance.cpp
-    ${VULKAN}/VulkanPipeline.h        ${VULKAN}/VulkanPipeline.cpp
-    ${VULKAN}/VulkanRenderer.h        ${VULKAN}/VulkanRenderer.cpp
-    ${VULKAN}/VulkanRenderPass.h      ${VULKAN}/VulkanRenderPass.cpp
-    ${VULKAN}/VulkanShader.h          ${VULKAN}/VulkanShader.cpp
-    ${VULKAN}/VulkanSurface.h         ${VULKAN}/VulkanSurface.cpp
-    ${VULKAN}/VulkanSwapchain.h       ${VULKAN}/VulkanSwapchain.cpp
-    ${VULKAN}/VulkanUniformBuffer.h   ${VULKAN}/VulkanUniformBuffer.cpp
-    ${VULKAN}/VulkanVertexShader.h    ${VULKAN}/VulkanVertexShader.cpp
-    ${VULKAN}/VulkanShader.h          ${VULKAN}/VulkanShader.cpp
-    ${VULKAN}/VulkanShader.h          ${VULKAN}/VulkanShader.cpp
-    # - Third-party
-    # -- Loguru (logging utility)
-    ${VENDOR}/loguru/loguru.hpp
-    ${VENDOR}/loguru/loguru.cpp
-    # -- ImGui  (GUI framework + Vulkan backend)
-    ${VENDOR}/imgui/imconfig.h
-    ${VENDOR}/imgui/imgui.h
-    ${VENDOR}/imgui/imgui_impl_glfw.h
-    ${VENDOR}/imgui/imgui_impl_vulkan.h
-    ${VENDOR}/imgui/imgui_internal.h
-    ${VENDOR}/imgui/imstb_rectpack.h
-    ${VENDOR}/imgui/imstb_textedit.h
-    ${VENDOR}/imgui/imstb_truetype.h
-    ${VENDOR}/imgui/imgui_impl_glfw.cpp
-    ${VENDOR}/imgui/imgui_impl_vulkan.cpp
-    ${VENDOR}/imgui/imgui.cpp
-    ${VENDOR}/imgui/imgui_demo.cpp
-    ${VENDOR}/imgui/imgui_draw.cpp
-    ${VENDOR}/imgui/imgui_tables.cpp
-    ${VENDOR}/imgui/imgui_widgets.cpp
-)
+set(IMGUI_DIR ${VENDOR_DIR}/imgui)
+set(GLFW_DIR ${VENDOR_DIR}/glfw)
+set(LOGURU_DIR ${VENDOR_DIR}/loguru)
 
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${SOURCE})
-
-##########################################################
-# Vendor
-##########################################################
-
-target_include_directories(${PROJECT_NAME}
-    PUBLIC ${VENDOR}
-)
+include_directories(${PROJECT_NAME} ${SOURCE_DIR})
+include_directories(${PROJECT_NAME} ${SOURCE_DIR})
+include_directories(${PROJECT_NAME} ${SOURCE_DIR})
 
 # GLFW
-set(GLFW_DIR ${VENDOR}/glfw) # Set this to point to an up-to-date GLFW repo
 option(GLFW_BUILD_EXAMPLES "Build the GLFW example programs" OFF)
 option(GLFW_BUILD_TESTS "Build the GLFW test programs" OFF)
 option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
@@ -113,33 +49,48 @@ option(GLFW_DOCUMENT_INTERNALS "Include internals in documentation" OFF)
 add_subdirectory(${GLFW_DIR} bin EXCLUDE_FROM_ALL)
 include_directories(${GLFW_DIR}/include)
 
+# Dear ImGui
+include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends ..)
+
+# Loguru
+set(LOGURU_WITH_STREAMS TRUE)
+add_subdirectory(${LOGURU_DIR}) # defines target 'loguru::loguru'
+include_directories(${LOGURU_DIR})
+
 # Libraries
 find_package(Vulkan REQUIRED)
-set(LIBRARIES "glfw;Vulkan::Vulkan")
+#find_library(VULKAN_LIBRARY
+#NAMES vulkan vulkan-1)
+#set(LIBRARIES "glfw;${VULKAN_LIBRARY}")
+set(LIBRARIES "glfw;Vulkan::Vulkan;loguru::loguru")
 
 # Use vulkan headers from glfw:
-target_include_directories(${PROJECT_NAME}
-        PUBLIC ${GLFW_DIR}/deps
-        PUBLIC ${VENDOR})
+include_directories(${GLFW_DIR}/deps)
+
+file(GLOB_RECURSE sources ${SOURCE_DIR}/*)
+
+add_executable(${PROJECT_NAME} ${sources} ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp ${IMGUI_DIR}/imgui.cpp ${IMGUI_DIR}/imgui_draw.cpp ${IMGUI_DIR}/imgui_demo.cpp ${IMGUI_DIR}/imgui_tables.cpp ${IMGUI_DIR}/imgui_widgets.cpp)
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DImTextureID=ImU64)
 
 
-##########################################################
-# Fixed CMakeLists.txt part
-##########################################################
-
+# Installation
 INSTALL(PROGRAMS
-    $<TARGET_FILE:${PROJECT_NAME}>
-    DESTINATION bin)
+        $<TARGET_FILE:${PROJECT_NAME}>
+        DESTINATION bin)
 
 set(ALL_TARGETS ${PROJECT_NAME})
 
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+
+###
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+###
 
 # Include CMake setup
 include(cmake/main-config.cmake)

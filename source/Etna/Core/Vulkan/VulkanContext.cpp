@@ -1,7 +1,7 @@
 #include "VulkanContext.h"
 
 #include "Etna/Core/Utils.h"
-#include "imgui/imgui.h"
+#include <imgui.h>
 
 #include <set>
 
@@ -22,7 +22,7 @@ namespace vkc
         // Don't change initialization order!
         Singleton->GInstance = InstanceBuilder{}.Build();
 #ifdef _DEBUG
-        Singleton->GDebugMessenger = DebugMessengerBuilder{}.Build();
+        //Singleton->GDebugMessenger = DebugMessengerBuilder{}.Build();
 #endif
         Singleton->GSurface = SurfaceBuilder{}
             .SetWindow(window)

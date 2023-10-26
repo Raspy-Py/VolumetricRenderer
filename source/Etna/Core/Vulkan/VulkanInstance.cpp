@@ -5,6 +5,36 @@
 
 #include <cstring>
 
+
+static VkDebugReportCallbackEXT g_DebugReport = VK_NULL_HANDLE;
+
+
+static bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension)
+{
+    for (const VkExtensionProperties& p : properties)
+        if (strcmp(p.extensionName, extension) == 0)
+            return true;
+    return false;
+}
+
+
+#ifdef _DEBUG
+static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(
+    VkDebugReportFlagsEXT flags,
+    VkDebugReportObjectTypeEXT objectType,
+    uint64_t object,
+    size_t location,
+    int32_t messageCode,
+    const char* pLayerPrefix,
+    const char* pMessage,
+    void* pUserData)
+{
+    (void)flags; (void)object; (void)location; (void)messageCode; (void)pUserData; (void)pLayerPrefix; // Unused arguments
+    fprintf(stderr, "[vulkan] Debug report from ObjectType: %i\nMessage: %s\n\n", objectType, pMessage);
+    return VK_FALSE;
+}
+#endif // _DENUG
+
 namespace vkc
 {
 #ifdef _DEBUG
@@ -26,14 +56,26 @@ namespace vkc
 
         if (EnableValidationLayers)
         {
-            instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+            //instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
-        instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+
+        uint32_t properties_count;
+        std::vector<VkExtensionProperties> properties;
+        vkEnumerateInstanceExtensionProperties(nullptr, &properties_count, nullptr);
+        properties.resize(properties_count);
+        vkEnumerateInstanceExtensionProperties(nullptr, &properties_count, properties.data());
+;
+
+        if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+            instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+
+        //instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+        instanceExtensions.push_back("VK_EXT_debug_report");
 
         return instanceExtensions;
     }
 
-    bool InstanceBuilder::CheckInstanceExtensionsSupport(std::vector<const char*>* requiredExtensions)
+    bool InstanceBuilder::CheckInstanceExtensionsSupport(const std::vector<const char*>* requiredExtensions)
     {
         // Get the extensions count first
         uint32_t extensionsCount = 0;
@@ -130,9 +172,9 @@ namespace vkc
             createInfo.enabledLayerCount = static_cast<uint32_t>(ValidationLayers.size());
             createInfo.ppEnabledLayerNames = ValidationLayers.data();
 
-            VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-            PopulateDebugMessengerCreateInfo(debugCreateInfo);
-            createInfo.pNext = &debugCreateInfo;
+            //VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+            //PopulateDebugMessengerCreateInfo(debugCreateInfo);
+            //createInfo.pNext = &debugCreateInfo;
         }
         else
         {
@@ -144,6 +186,21 @@ namespace vkc
         if (vkCreateInstance(&createInfo, nullptr, &instance.Handle) != VK_SUCCESS)
         {
             Error("Failed to create a Vulkan instance.");
+        }
+
+        auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance.Handle, "vkCreateDebugReportCallbackEXT");
+        if(vkCreateDebugReportCallbackEXT == nullptr)
+        {
+            Error("Failed to load vkCreateDebugReportCallbackEXT. ");
+        }
+        VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
+        debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+        debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+        debug_report_ci.pfnCallback = debug_report;
+        debug_report_ci.pUserData = nullptr;
+        if (vkCreateDebugReportCallbackEXT(instance.Handle, &debug_report_ci, nullptr, &g_DebugReport) != VK_SUCCESS)
+        {
+            Error("Failed to create debug report object.");
         }
 
         return instance;

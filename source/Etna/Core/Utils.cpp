@@ -1,6 +1,6 @@
 #include "Utils.h"
 
-#include <loguru/loguru.hpp>
+#include <loguru.hpp>
 
 #include <fstream>
 #include <string>

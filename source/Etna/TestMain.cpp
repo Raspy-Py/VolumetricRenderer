@@ -2,9 +2,13 @@
 #include "Core/Vulkan/VulkanCore.h"
 #include "Core/Vulkan/VulkanRenderer.h"
 #include <memory>
+#include "Core/Utils.h"
 
 int main(int argc, char** argv)
 {
+    LogsInit();
+    glfwInit();
+
     // Create window with Vulkan context
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     auto window = glfwCreateWindow(1280, 720, "Etna App", nullptr, nullptr);
