@@ -1,6 +1,7 @@
 #include "VulkanContext.h"
 
 #include "Etna/Core/Utils.h"
+#include "VulkanCore.h"
 #include <imgui.h>
 
 #include <set>
@@ -21,13 +22,11 @@ namespace vkc
         Singleton->GWindow = window;
         // Don't change initialization order!
         Singleton->GInstance = InstanceBuilder{}.Build();
-#ifdef _DEBUG
-        //Singleton->GDebugMessenger = DebugMessengerBuilder{}.Build();
-#endif
-        Singleton->GSurface = SurfaceBuilder{}
-            .SetWindow(window)
-            .Build();
+        Singleton->GSurface = CreateSurface(window);
         Singleton->GDevice = DeviceBuilder{}.Build();
+
+        auto indices = GetQueueFamilies(Context::GetPhysicalDevice(), Context::GetSurface());
+        Singleton->GTransferCommandPool = CreateCommandPool(indices.TransferFamily.value());
     }
 
     void Context::Destroy()
@@ -65,7 +64,7 @@ namespace vkc
 
     VkSurfaceKHR Context::GetSurface()
     {
-        return Get().GSurface.Handle;
+        return Get().GSurface;
     }
 
     VkAllocationCallbacks* Context::GetAllocator()
@@ -95,5 +94,10 @@ namespace vkc
     VkQueue Context::GetPresentationQueue()
     {
         return Get().GDevice.PresentationQueue;
+    }
+
+    VkCommandPool Context::GetTransferCommandPool()
+    {
+        return Get().GTransferCommandPool;
     }
 }

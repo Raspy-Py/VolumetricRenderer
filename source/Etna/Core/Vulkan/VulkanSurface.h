@@ -5,30 +5,7 @@
 
 namespace vkc
 {
-    class Surface
-    {
-    public:
-        Surface() = default;
-        ~Surface();
-
-    public:
-        VkSurfaceKHR Handle;
-    };
-
-    class SurfaceBuilder
-    {
-    public:
-        SurfaceBuilder() = default;
-        ~SurfaceBuilder() = default;
-
-        Surface Build();
-
-        SurfaceBuilder& SetWindow(GLFWwindow* window);
-
-    private:
-        GLFWwindow* Window;
-    };
-
+    VkSurfaceKHR CreateSurface(GLFWwindow* window);
 }
 
 #endif //VULKANSURFACE_H

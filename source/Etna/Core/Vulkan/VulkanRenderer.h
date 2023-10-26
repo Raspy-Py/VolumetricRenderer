@@ -81,7 +81,6 @@ namespace vkc
 
         // Command pools
         std::vector<VkCommandPool> GraphicsCommandPools;
-        VkCommandPool TransferCommandPool;
 
         // Command buffers
         std::vector<VkCommandBuffer> GraphicsCommandBuffers;

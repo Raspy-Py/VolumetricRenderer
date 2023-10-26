@@ -57,4 +57,9 @@ namespace vkc
         vkDestroyBuffer(Context::GetDevice(), stagingBuffer, Context::GetAllocator());
         vkFreeMemory(Context::GetDevice(), stagingBufferMemory, Context::GetAllocator());
     }
+
+    void IndexBuffer::Bind(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+    {
+        vkCmdBindIndexBuffer(commandBuffer, Buffer, 0, VK_INDEX_TYPE_UINT16);
+    }
 }

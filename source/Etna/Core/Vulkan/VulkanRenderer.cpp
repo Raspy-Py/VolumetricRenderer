@@ -26,7 +26,6 @@ namespace vkc
         CreateSemaphores(RenderFinishedSemaphores.data(), MaxFramesInFlight);
 
         auto indices = GetQueueFamilies(Context::GetPhysicalDevice(), Context::GetSurface());
-        TransferCommandPool = CreateCommandPool(indices.TransferFamily.value());
         for (uint32_t i = 0; i < MaxFramesInFlight; ++i)
         {
             GraphicsCommandPools.push_back(CreateCommandPool(indices.GraphicsFamily.value()));
@@ -55,6 +54,8 @@ namespace vkc
     void Renderer::BeginFrame()
     {
         Context::StartFrame();
+        vkWaitForFences(Context::GetDevice(), 1, &FrameFences[CurrentFrame], VK_TRUE, UINT64_MAX);
+        vkResetFences(Context::GetDevice(), 1, &FrameFences[CurrentFrame]);
 
         if(GSwapchain.AcquireNextImage(ImageAvailableSemaphores[CurrentFrame]))
         {
@@ -77,6 +78,19 @@ namespace vkc
 
     void Renderer::RenderFrame()
     {
+        auto cmdBuffer = GraphicsCommandBuffers[CurrentFrame];
+
+        // Record drawing commands
+        vkResetCommandBuffer(cmdBuffer, 0);
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = 0;
+        beginInfo.pInheritanceInfo = nullptr;
+        if (vkBeginCommandBuffer(cmdBuffer, &beginInfo) != VK_SUCCESS)
+        {
+            Error("Failed to begin recording command buffer.");
+        }
+
         while (!ClientRenderQueue.empty())
         {
             auto& passName = ClientRenderQueue.front();
@@ -85,12 +99,34 @@ namespace vkc
             {
                 auto& pass = ptr->second;
                 ClientRenderQueue.pop();
-                auto cmdBuffer = GraphicsCommandBuffers[CurrentFrame];
 
                 pass.Pass->Begin(cmdBuffer, pass.FrameBuffer, pass.Area);
                 pass.Delegate(cmdBuffer);
                 pass.Pass->End(cmdBuffer);
             }
+        }
+        if (vkEndCommandBuffer(cmdBuffer) != VK_SUCCESS)
+        {
+            Error("Failed to record command buffer.");
+        }
+
+        VkSemaphore waitSemaphores[] = { ImageAvailableSemaphores[CurrentFrame] };
+        VkSemaphore signalSemaphores[] = { RenderFinishedSemaphores[CurrentFrame] };
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &cmdBuffer;
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+
+        if (vkQueueSubmit(Context::GetGraphicsQueue(), 1, &submitInfo, FrameFences[CurrentFrame]) != VK_SUCCESS)
+        {
+            Error("Failed to submit command.");
         }
     }
 

@@ -11,12 +11,12 @@ namespace  vkc
     class VertexBuffer : public BindableInterface
     {
     public:
-        VertexBuffer(VkDeviceSize size);
+        explicit VertexBuffer(VkDeviceSize size);
         VertexBuffer(VkCommandPool cmdPool, V* data, VkDeviceSize size);
         VertexBuffer(const VertexBuffer&) = delete;
         VertexBuffer& operator=(const VertexBuffer&) = delete;
 
-        ~VertexBuffer();
+        ~VertexBuffer() override = default ;
 
         void Update(VkCommandPool cmdPool, V* data);
         void Bind(VkCommandBuffer commandBuffer, uint32_t imageIndex) override;

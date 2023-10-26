@@ -29,13 +29,15 @@ namespace vkc
 
     bool Swapchain::PresentImage(VkSemaphore semaphore)
     {
+        VkSemaphore signalSemaphores[] = {semaphore};
         VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = &semaphore;
+        presentInfo.pWaitSemaphores = signalSemaphores;
 
+        VkSwapchainKHR swapchains[] = {Handle};
         presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = &Handle;
+        presentInfo.pSwapchains = swapchains;
         presentInfo.pImageIndices = &CurrentImage;
         presentInfo.pResults = nullptr;
 
@@ -50,6 +52,8 @@ namespace vkc
         {
             Error("Failed to present swapchain image.");
         }
+
+        CurrentImage = (CurrentImage + 1) % ImageCount;
 
         return false;
     }

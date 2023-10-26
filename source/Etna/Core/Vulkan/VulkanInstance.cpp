@@ -5,9 +5,16 @@
 
 #include <cstring>
 
-
 static VkDebugReportCallbackEXT g_DebugReport = VK_NULL_HANDLE;
+#ifndef NDEBUG
+const bool c_EnableValidationLayers = true;
+#else
+const bool c_EnableValidationLayers = false;
+#endif // !NDEBUG
 
+static const std::vector<const char*> c_ValidationLayers	= {
+    "VK_LAYER_KHRONOS_validation"
+};
 
 static bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties, const char* extension)
 {
@@ -18,7 +25,6 @@ static bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& prope
 }
 
 
-#ifdef _DEBUG
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(
     VkDebugReportFlagsEXT flags,
     VkDebugReportObjectTypeEXT objectType,
@@ -33,7 +39,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(
     fprintf(stderr, "[vulkan] Debug report from ObjectType: %i\nMessage: %s\n\n", objectType, pMessage);
     return VK_FALSE;
 }
-#endif // _DENUG
+
 
 namespace vkc
 {
@@ -54,23 +60,10 @@ namespace vkc
 
         std::vector<const char*> instanceExtensions(ppGlfwExtensions, ppGlfwExtensions + glfwExtensionsCount);
 
-        if (EnableValidationLayers)
+        if (c_EnableValidationLayers)
         {
-            //instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+            instanceExtensions.push_back("VK_EXT_debug_report");
         }
-
-        uint32_t properties_count;
-        std::vector<VkExtensionProperties> properties;
-        vkEnumerateInstanceExtensionProperties(nullptr, &properties_count, nullptr);
-        properties.resize(properties_count);
-        vkEnumerateInstanceExtensionProperties(nullptr, &properties_count, properties.data());
-;
-
-        if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
-            instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-
-        //instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-        instanceExtensions.push_back("VK_EXT_debug_report");
 
         return instanceExtensions;
     }
@@ -115,7 +108,7 @@ namespace vkc
         std::vector<VkLayerProperties> availableLayers(layersCount);
         vkEnumerateInstanceLayerProperties(&layersCount, availableLayers.data());
 
-        for (const auto& layer : ValidationLayers)
+        for (const auto& layer : c_ValidationLayers)
         {
             bool layerFound = false;
 
@@ -139,8 +132,9 @@ namespace vkc
 
     Instance InstanceBuilder::Build()
     {
+        Instance instance{};
         // Checking whether requested validation layers are available
-        if (EnableValidationLayers && !CheckValidationLayersSupport())
+        if (c_EnableValidationLayers && !CheckValidationLayersSupport())
         {
             Error("Some validation layers are requested, but not available!");
         }
@@ -167,14 +161,10 @@ namespace vkc
         createInfo.pApplicationInfo = &appInfo;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
         createInfo.ppEnabledExtensionNames = instanceExtensions.data();
-        if (EnableValidationLayers)
+        if (c_EnableValidationLayers)
         {
-            createInfo.enabledLayerCount = static_cast<uint32_t>(ValidationLayers.size());
-            createInfo.ppEnabledLayerNames = ValidationLayers.data();
-
-            //VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-            //PopulateDebugMessengerCreateInfo(debugCreateInfo);
-            //createInfo.pNext = &debugCreateInfo;
+            createInfo.enabledLayerCount = static_cast<uint32_t>(c_ValidationLayers.size());
+            createInfo.ppEnabledLayerNames = c_ValidationLayers.data();
         }
         else
         {
@@ -182,25 +172,31 @@ namespace vkc
             createInfo.ppEnabledLayerNames = nullptr;
         }
 
-        Instance instance{};
-        if (vkCreateInstance(&createInfo, nullptr, &instance.Handle) != VK_SUCCESS)
+        if (vkCreateInstance(&createInfo, nullptr /* TODO: explore memory management*/, &instance.Handle) != VK_SUCCESS)
         {
             Error("Failed to create a Vulkan instance.");
         }
 
-        auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance.Handle, "vkCreateDebugReportCallbackEXT");
-        if(vkCreateDebugReportCallbackEXT == nullptr)
+
+        if (c_EnableValidationLayers)
         {
-            Error("Failed to load vkCreateDebugReportCallbackEXT. ");
-        }
-        VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
-        debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-        debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-        debug_report_ci.pfnCallback = debug_report;
-        debug_report_ci.pUserData = nullptr;
-        if (vkCreateDebugReportCallbackEXT(instance.Handle, &debug_report_ci, nullptr, &g_DebugReport) != VK_SUCCESS)
-        {
-            Error("Failed to create debug report object.");
+            auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT) vkGetInstanceProcAddr(
+                instance.Handle, "vkCreateDebugReportCallbackEXT");
+            if (vkCreateDebugReportCallbackEXT == nullptr)
+            {
+                Error("Failed to load vkCreateDebugReportCallbackEXT().");
+            }
+
+            VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
+            debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+            debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT |
+                                    VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+            debug_report_ci.pfnCallback = debug_report;
+            debug_report_ci.pUserData = nullptr;
+            if (vkCreateDebugReportCallbackEXT(instance.Handle, &debug_report_ci, nullptr, &g_DebugReport) != 0)
+            {
+                Error("Failed to vkCreateDebugReportCallbackEXT().");
+            }
         }
 
         return instance;

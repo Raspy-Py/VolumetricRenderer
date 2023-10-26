@@ -2,10 +2,11 @@
 #define VULKANINDEXBUFFER_H
 
 #include "VulkanHeader.h"
+#include "VulkanBindableInterface.h"
 
 namespace vkc
 {
-    class IndexBuffer
+    class IndexBuffer : public BindableInterface
     {
     public:
         IndexBuffer(VkDeviceSize size);
@@ -13,9 +14,10 @@ namespace vkc
         IndexBuffer(const IndexBuffer&) = delete;
         IndexBuffer& operator=(const IndexBuffer&) = delete;
 
-        ~IndexBuffer();
+        ~IndexBuffer() override = default;
 
         void Update(VkCommandPool cmdPool, uint16_t* data);
+        void Bind(VkCommandBuffer commandBuffer, uint32_t imageIndex) override;
 
     private:
         VkBuffer Buffer;

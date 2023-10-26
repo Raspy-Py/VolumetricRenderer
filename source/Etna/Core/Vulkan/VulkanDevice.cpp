@@ -28,22 +28,22 @@ namespace vkc
 
         // Selecting physical device
         {
-            uint32_t GPUsCount = 0;
-            vkEnumeratePhysicalDevices(instance, &GPUsCount, nullptr);
+            uint32_t deviceCount = 0;
+            vkEnumeratePhysicalDevices(Context::GetInstance(), &deviceCount, nullptr);
 
-            if (GPUsCount == 0)
+            if (deviceCount == 0)
             {
                 Error("Failed to find device with Vulkan support.");
             }
 
-            std::vector<VkPhysicalDevice> GPUs(GPUsCount);
-            vkEnumeratePhysicalDevices(instance, &GPUsCount, GPUs.data());
+            std::vector<VkPhysicalDevice> devices(deviceCount);
+            vkEnumeratePhysicalDevices(Context::GetInstance(), &deviceCount, devices.data());
 
-            for (const auto &GPU: GPUs)
+            for (const auto& gpu : devices)
             {
-                if (CheckDeviceSuitable(GPU, surface))
+                if (CheckDeviceSuitable(gpu, Context::GetSurface()))
                 {
-                    device.Physical = GPU;
+                    device.Physical = gpu;
                     break;
                 }
             }
@@ -51,7 +51,8 @@ namespace vkc
             if (device.Physical == VK_NULL_HANDLE)
             {
                 Error("Failed to find suitable device.");
-            }else
+            }
+            else
             {
                 VkPhysicalDeviceProperties deviceProperties = {};
                 vkGetPhysicalDeviceProperties(device.Physical, &deviceProperties);

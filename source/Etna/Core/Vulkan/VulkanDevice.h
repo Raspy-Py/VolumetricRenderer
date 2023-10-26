@@ -11,7 +11,7 @@ namespace vkc
     {
     public:
         Device() = default;
-        ~Device(){ static_assert("IMPLEMENT!");};
+        ~Device() = default;
     public:
         /*
          * Broke naming convention here, to avoid duplication of "device".

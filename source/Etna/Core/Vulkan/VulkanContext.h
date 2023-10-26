@@ -37,16 +37,20 @@ namespace vkc
         static VkQueue GetGraphicsQueue();
         static VkQueue GetPresentationQueue();
 
+        static VkCommandPool GetTransferCommandPool();
+
     private:
         Context() = default;
 
     private:
-        Instance    GInstance;
-        Surface     GSurface;
-        Device      GDevice;
+        Instance        GInstance;
+        VkSurfaceKHR    GSurface;
+        Device          GDevice;
 
         DebugMessenger  GDebugMessenger;
         GLFWwindow*     GWindow;
+
+        VkCommandPool GTransferCommandPool;
 
     private:
         static Context *Singleton;
