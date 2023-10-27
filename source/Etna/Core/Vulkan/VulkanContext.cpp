@@ -10,7 +10,7 @@ namespace vkc
 {
     Context* Context::Singleton = nullptr;
 
-    void Context::Create(GLFWwindow *window)
+    void Context::Create()
     {
         if (Singleton != nullptr)
         {
@@ -19,10 +19,13 @@ namespace vkc
 
         Singleton = new Context();
 
-        Singleton->GWindow = window;
+        // Create window with Vulkan context
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        Singleton->GWindow = glfwCreateWindow(1280, 720, "Etna App", nullptr, nullptr);
+
         // Don't change initialization order!
         Singleton->GInstance = InstanceBuilder{}.Build();
-        Singleton->GSurface = CreateSurface(window);
+        Singleton->GSurface = CreateSurface(Context::GetWindow());
         Singleton->GDevice = DeviceBuilder{}.Build();
 
         auto indices = GetQueueFamilies(Context::GetPhysicalDevice(), Context::GetSurface());

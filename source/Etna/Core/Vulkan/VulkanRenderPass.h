@@ -33,6 +33,9 @@ namespace vkc
         void End(VkCommandBuffer commandBuffer);
 
     public:
+        [[nodiscard]] VkPipelineLayout GetLayout() const;
+
+    public:
         VkRenderPass Handle;
 
     private:

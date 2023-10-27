@@ -18,27 +18,43 @@
 
 namespace vkc
 {
-    using RenderPassDelegate = std::function<void(VkCommandBuffer)>;
-    struct RenderPassDispatchInfo
+    // Holds data, which is passed to the delegate
+    // during pass dispatching
+    struct RenderPassContext
     {
-        RenderPassDispatchInfo(const RenderPassCreateInfo& initInfo)
+        VkCommandBuffer CommandBuffer;
+        VkPipelineLayout PipelineLayout;
+        uint32_t ImageIndex;
+        uint32_t FrameIndex;
+    };
+
+    // Function, which is called between pass.Begin() an pass.End()
+    // used for binding resources
+    using RenderPassDelegate = std::function<void(RenderPassContext&&)>;
+
+    // Contains all data for dispatching render pass
+    struct RenderPassContainer
+    {
+        RenderPassContainer(const RenderPassCreateInfo& initInfo)
         {
             Area = {};
-            FrameBuffer = VK_NULL_HANDLE;
             Pass = std::make_unique<RenderPass>(initInfo);
-            Delegate = [](VkCommandBuffer){};
+            Delegate = [](RenderPassContext){};
+            CurrentFramebufferIndex = 0;
         }
 
         VkRect2D Area;
-        VkFramebuffer FrameBuffer;
+        uint32_t CurrentFramebufferIndex;
+        RenderPassDelegate Delegate;
+        std::vector<VkFramebuffer> Framebuffers;
         std::unique_ptr<RenderPass> Pass;
-        std::function<void(VkCommandBuffer)> Delegate;
     };
+
 
     class Renderer
     {
     public:
-        void Init(GLFWwindow* window);
+        void Init();
         void Shutdown();
 
         /// Acquire new image from swapchain, rebuild it if necessary
@@ -56,11 +72,21 @@ namespace vkc
         /// Register new render pass
         void AddRenderPass(const std::string& name, const RenderPassCreateInfo& initInfo);
 
+        void AddPresentPass(const std::string& name, const RenderPassCreateInfo& initInfo);
+
         /// Add render pass to queue
         void EnqueueRenderPass(const std::string& name,
-                               VkFramebuffer framebuffer,
+                               uint32_t frameBufferIndex,
                                VkRect2D area,
-                               RenderPassDelegate delegate = [](VkCommandBuffer){});
+                               RenderPassDelegate&& delegate = [](RenderPassContext){});
+
+        void EnqueuePresentPass(const std::string& name,
+                               VkRect2D area,
+                               RenderPassDelegate&& delegate = [](RenderPassContext){});
+
+        void EnqueueCommonPass(const std::string& name,
+                               VkRect2D area,
+                               RenderPassDelegate&& delegate = [](RenderPassContext){});
 
         [[nodiscard]] VkFormat GetSwapchainImageFormat() const;
         [[nodiscard]] uint32_t GetSwapchainCurrentImage() const;
@@ -68,6 +94,10 @@ namespace vkc
 
 
         void CreateSwapchainFramebuffers(std::vector<VkFramebuffer>& framebuffers, const std::string& renderPass);
+
+    public:
+        [[nodiscard]] uint32_t GetFramesCount() const;
+        [[nodiscard]] uint32_t GetCurrentFrame() const;
 
     private:
         uint32_t MaxFramesInFlight;
@@ -87,7 +117,7 @@ namespace vkc
 
         // Render passes
         std::queue<std::string> ClientRenderQueue;
-        std::map<std::string, RenderPassDispatchInfo> ClientRenderPassesMap;
+        std::map<std::string, RenderPassContainer> ClientRenderPassesMap;
     };
 }
 

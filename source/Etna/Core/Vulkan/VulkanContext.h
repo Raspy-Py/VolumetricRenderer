@@ -18,7 +18,7 @@ namespace vkc
     class Context
     {
     public:
-        static void Create(GLFWwindow *window);
+        static void Create();
         static void Destroy();
         static Context &Get();
 

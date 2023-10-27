@@ -2,6 +2,7 @@
 #define VULKANCORE_H
 
 #include "VulkanHeader.h"
+#include "VulkanContext.h"
 
 #include <vector>
 #include <optional>
@@ -99,7 +100,7 @@ namespace vkc
     {
     public:
         virtual VkDescriptorSetLayout CreateDescriptorSetLayout(uint32_t binding, ShaderStage shaderStage) = 0;
-        virtual std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorSetLayout layout, vkc::DescriptorPool pool) = 0;
+        virtual std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorSetLayout layout, const vkc::DescriptorPool& pool) = 0;
     };
 
     /*
@@ -124,13 +125,6 @@ namespace vkc
         VkPhysicalDevice        device,
         VkSurfaceKHR            surface);
 
-
-    template <typename BufferObjectType>
-    void UpdateBufferDescriptorSets(
-        VkBuffer*           buffers,
-        VkDescriptorSet*    sets,
-        uint32_t            count = 1);
-
     void UpdateImageDescriptorSets(
         VkSampler*          samplers,
         VkImageView*        views,
@@ -151,9 +145,41 @@ namespace vkc
         VkImageTiling               tiling,
         VkFormatFeatureFlags        features);
 
+
+    template <typename BufferObjectType>
+    void UpdateBufferDescriptorSets(
+        VkBuffer*           buffers,
+        VkDescriptorSet*    sets,
+        uint32_t            count)
+    {
+        for (uint32_t i = 0; i < count; i++)
+        {
+            VkDescriptorBufferInfo bufferInfo{
+                .buffer = buffers[i],
+                .offset = 0,
+                .range = sizeof(BufferObjectType),
+            };
+
+            VkWriteDescriptorSet descriptorWrite{};
+            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrite.dstSet = sets[i];
+            descriptorWrite.dstBinding = 0;
+            descriptorWrite.dstArrayElement = 0;
+            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrite.descriptorCount = 1;
+            descriptorWrite.pBufferInfo = &bufferInfo;
+            descriptorWrite.pImageInfo = nullptr;
+            descriptorWrite.pTexelBufferView = nullptr;
+
+            vkUpdateDescriptorSets(Context::GetDevice(), 1, &descriptorWrite, 0, nullptr);
+        }
+    }
+
     /*
      * Create functions
      */
+
+    VkDescriptorPool CreateDescriptorPool(VkDescriptorType type, uint32_t count = 1);
 
     VkCommandPool CreateCommandPool(uint32_t queueFamilyIndex);
 

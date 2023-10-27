@@ -53,8 +53,6 @@ namespace vkc
             Error("Failed to present swapchain image.");
         }
 
-        CurrentImage = (CurrentImage + 1) % ImageCount;
-
         return false;
     }
 

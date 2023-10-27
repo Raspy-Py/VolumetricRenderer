@@ -11,7 +11,7 @@ namespace vkc
         BindableInterface() = default;
         virtual ~BindableInterface() = default;
 
-        virtual void Bind(VkCommandBuffer commandBuffer, uint32_t imageIndex = 0) = 0;
+        virtual void Bind(VkCommandBuffer commandBuffer, uint32_t imageIndex) = 0;
     };
 }
 

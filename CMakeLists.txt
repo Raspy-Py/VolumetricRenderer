@@ -59,9 +59,6 @@ include_directories(${LOGURU_DIR})
 
 # Libraries
 find_package(Vulkan REQUIRED)
-#find_library(VULKAN_LIBRARY
-#NAMES vulkan vulkan-1)
-#set(LIBRARIES "glfw;${VULKAN_LIBRARY}")
 set(LIBRARIES "glfw;Vulkan::Vulkan;loguru::loguru")
 
 # Use vulkan headers from glfw:
@@ -75,13 +72,13 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DImTextureID=ImU64)
 
 
 # Installation
-INSTALL(PROGRAMS
+install(PROGRAMS
         $<TARGET_FILE:${PROJECT_NAME}>
         DESTINATION bin)
 
 set(ALL_TARGETS ${PROJECT_NAME})
 
-SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF

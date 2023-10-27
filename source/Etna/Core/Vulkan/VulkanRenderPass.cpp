@@ -83,4 +83,9 @@ namespace vkc
     {
         vkCmdEndRenderPass(commandBuffer);
     }
+
+    VkPipelineLayout RenderPass::GetLayout() const
+    {
+        return RenderPipeline.Layout;
+    }
 }

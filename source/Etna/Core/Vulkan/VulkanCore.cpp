@@ -1,7 +1,6 @@
 #include "VulkanCore.h"
 
 #include "Etna/Core/Utils.h"
-#include "VulkanContext.h"
 
 #include <cstring>
 #include <vector>
@@ -120,36 +119,6 @@ namespace vkc
         }
     }
 
-    // Bind descriptor sets to certain buffers
-    template <typename BufferObjectType>
-    void UpdateBufferDescriptorSets(
-        VkBuffer*           buffers,
-        VkDescriptorSet*    sets,
-        uint32_t            count)
-    {
-        for (size_t i = 0; i < count; i++)
-        {
-            VkDescriptorBufferInfo bufferInfo{
-                .buffer = buffers[i],
-                .offset = 0,
-                .range = sizeof(BufferObjectType),
-            };
-
-            VkWriteDescriptorSet descriptorWrite{};
-            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrite.dstSet = sets[i];
-            descriptorWrite.dstBinding = 0;
-            descriptorWrite.dstArrayElement = 0;
-            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptorWrite.descriptorCount = 1;
-            descriptorWrite.pBufferInfo = &bufferInfo;
-            descriptorWrite.pImageInfo = nullptr;
-            descriptorWrite.pTexelBufferView = nullptr;
-
-            vkUpdateDescriptorSets(Context::GetDevice(), 1, &descriptorWrite, 0, nullptr);
-        }
-    }
-
     // Bind descriptor sets to certain images
     void UpdateImageDescriptorSets(VkSampler* samplers, VkImageView* views, VkImageLayout* layouts, VkDescriptorSet* sets, uint32_t count)
     {
@@ -256,6 +225,27 @@ namespace vkc
         return indices;
     }
 
+    VkDescriptorPool CreateDescriptorPool(VkDescriptorType type, uint32_t count)
+    {
+        VkDescriptorPoolSize poolSize{};
+        poolSize.type = type;
+        poolSize.descriptorCount = static_cast<uint32_t>(count);
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = 1;
+        poolInfo.pPoolSizes = &poolSize;
+        poolInfo.maxSets = static_cast<uint32_t>(count);
+
+
+        VkDescriptorPool pool;
+        if (vkCreateDescriptorPool(Context::GetDevice(), &poolInfo, nullptr, &pool) != VK_SUCCESS)
+        {
+            Error("Failed to create descriptor pool.");
+        }
+
+        return pool;
+    }
 
     VkCommandPool CreateCommandPool(uint32_t queueFamilyIndex)
     {

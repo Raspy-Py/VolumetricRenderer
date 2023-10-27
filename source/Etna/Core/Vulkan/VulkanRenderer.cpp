@@ -9,10 +9,9 @@ static const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 namespace vkc
 {
-    void Renderer::Init(GLFWwindow* window)
+    void Renderer::Init()
     {
-        Context::Create(window);
-
+        Context::Create();
         CurrentFrame = 0;
         MaxFramesInFlight = MAX_FRAMES_IN_FLIGHT;
         GSwapchain = SwapchainBuilder{}.Build();
@@ -100,8 +99,8 @@ namespace vkc
                 auto& pass = ptr->second;
                 ClientRenderQueue.pop();
 
-                pass.Pass->Begin(cmdBuffer, pass.FrameBuffer, pass.Area);
-                pass.Delegate(cmdBuffer);
+                pass.Pass->Begin(cmdBuffer, pass.Framebuffers[pass.CurrentFramebufferIndex], pass.Area);
+                pass.Delegate({cmdBuffer, pass.Pass->GetLayout(), GSwapchain.GetCurrentImage(), CurrentFrame});
                 pass.Pass->End(cmdBuffer);
             }
         }
@@ -131,16 +130,22 @@ namespace vkc
     }
 
     void Renderer::EnqueueRenderPass(const std::string &name,
-                                     VkFramebuffer framebuffer,
+                                     uint32_t frameBufferIndex,
                                      VkRect2D area,
-                                     RenderPassDelegate delegate)
+                                     RenderPassDelegate&& delegate)
     {
         auto ptr = ClientRenderPassesMap.find(name);
         if (ptr != ClientRenderPassesMap.end())
         {
             auto& pass = ptr->second;
 
-            pass.FrameBuffer = framebuffer;
+            if (pass.Framebuffers.size() < (frameBufferIndex + 1))
+            {
+                Error("Not able to bind framebuffer[%i] to render pass [%s]. "
+                      "Only %i framebuffers exist for this render pass.",
+                      frameBufferIndex, name.c_str(), (int)pass.Framebuffers.size());
+            }
+            pass.CurrentFramebufferIndex = frameBufferIndex;
             pass.Area = area;
             pass.Delegate = std::move(delegate);
 
@@ -150,7 +155,7 @@ namespace vkc
 
     void Renderer::AddRenderPass(const std::string& name, const RenderPassCreateInfo& initInfo)
     {
-        ClientRenderPassesMap.emplace(name, std::move(RenderPassDispatchInfo(initInfo)));
+        ClientRenderPassesMap.emplace(name, std::move(RenderPassContainer(initInfo)));
     }
 
     void Renderer::CreateSwapchainFramebuffers(std::vector<VkFramebuffer> &framebuffers, const std::string &renderPass)
@@ -163,12 +168,13 @@ namespace vkc
         auto& pass = ptr->second;
 
         framebuffers.resize(GSwapchain.GetImageCount());
-        vkc::CreateFramebuffers(framebuffers.data(),
-                                pass.Pass->Handle,
-                                GSwapchain.GetExtent(),
-                                GSwapchain.GetImageViews().data(),
-                                nullptr,
-                                framebuffers.size());
+        vkc::CreateFramebuffers(
+            framebuffers.data(),
+            pass.Pass->Handle,
+            GSwapchain.GetExtent(),
+            GSwapchain.GetImageViews().data(),
+            nullptr, framebuffers.size()
+        );
     }
 
     VkFormat Renderer::GetSwapchainImageFormat() const
@@ -184,5 +190,51 @@ namespace vkc
     uint32_t Renderer::GetSwapchainCurrentImage() const
     {
         return GSwapchain.GetCurrentImage();
+    }
+
+    void Renderer::EnqueuePresentPass(const std::string &name, VkRect2D area, RenderPassDelegate&& delegate)
+    {
+        // For a framebuffer, which will be presented, we should specify
+        // an index provided by swapchain
+        EnqueueRenderPass(name, GSwapchain.GetCurrentImage(), area, std::move(delegate));
+    }
+
+    void Renderer::EnqueueCommonPass(const std::string &name, VkRect2D area, RenderPassDelegate&& delegate)
+    {
+        // Just use current "inflight frame" index
+        EnqueueRenderPass(name, CurrentFrame, area, std::move(delegate));
+    }
+
+    void Renderer::AddPresentPass(const std::string &name, const RenderPassCreateInfo &initInfo)
+    {
+        AddRenderPass(name, initInfo);
+
+        // Automatically create framebuffers for the present pass
+        // using swapchain images
+        auto ptr = ClientRenderPassesMap.find(name);
+        if (ptr == ClientRenderPassesMap.end())
+        {
+            Error("Render pass '%s' does not exist. ", name.c_str());
+        }
+
+        auto& pass = ptr->second;
+
+        pass.Framebuffers.resize(GSwapchain.GetImageCount());
+        vkc::CreateFramebuffers(pass.Framebuffers.data(),
+                                pass.Pass->Handle,
+                                GSwapchain.GetExtent(),
+                                GSwapchain.GetImageViews().data(),
+                                nullptr,
+                                pass.Framebuffers.size());
+    }
+
+    uint32_t Renderer::GetFramesCount() const
+    {
+        return MaxFramesInFlight;
+    }
+
+    uint32_t Renderer::GetCurrentFrame() const
+    {
+        return CurrentFrame;
     }
 }
