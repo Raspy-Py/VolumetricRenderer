@@ -38,6 +38,7 @@ namespace vkc
 
     void Renderer::Shutdown()
     {
+        GSwapchain.LogStatistics();
         vkDeviceWaitIdle(Context::GetDevice());
 
         for (size_t i = 0; i < MaxFramesInFlight; i++)
@@ -217,15 +218,16 @@ namespace vkc
             Error("Render pass '%s' does not exist. ", name.c_str());
         }
 
-        auto& pass = ptr->second;
+        auto &pass = ptr->second;
 
         pass.Framebuffers.resize(GSwapchain.GetImageCount());
-        vkc::CreateFramebuffers(pass.Framebuffers.data(),
-                                pass.Pass->Handle,
-                                GSwapchain.GetExtent(),
-                                GSwapchain.GetImageViews().data(),
-                                nullptr,
-                                pass.Framebuffers.size());
+        vkc::CreateFramebuffers(
+            pass.Framebuffers.data(),
+            pass.Pass->Handle,
+            GSwapchain.GetExtent(),
+            GSwapchain.GetImageViews().data(),
+            nullptr,
+            pass.Framebuffers.size());
     }
 
     uint32_t Renderer::GetFramesCount() const
@@ -236,5 +238,10 @@ namespace vkc
     uint32_t Renderer::GetCurrentFrame() const
     {
         return CurrentFrame;
+    }
+
+    uint32_t Renderer::GetSwapchainImageCount() const
+    {
+        return GSwapchain.GetImageCount();
     }
 }

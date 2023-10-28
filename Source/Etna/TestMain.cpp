@@ -40,6 +40,7 @@ int main(int argc, char** argv)
 
     LogsInit();
     glfwInit();
+    float iters = 0;
 
     vkc::Renderer renderer;
     renderer.Init();
@@ -71,16 +72,6 @@ int main(int argc, char** argv)
             glfwPollEvents();
             VkRect2D rect = {{0,0}, renderer.GetSwapchainExtent()};
 
-            auto currentTime = std::chrono::high_resolution_clock::now();
-            float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-            UniformBufferObject ubo = {
-                .model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-                .view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-                .proj = glm::perspective(glm::radians(45.0f), (float)1280 / (float)720, 0.1f, 10.0f)
-            };
-            ubo.proj[1][1] *= -1;
-            uniformBuffer.Update(&ubo, renderer.GetCurrentFrame());
-
             renderer.EnqueuePresentPass("base_pass", rect,
                 [rect, &descriptorSets, &indexBuffer, &vertexBuffer, indicesCount]
                 (vkc::RenderPassContext rpc)
@@ -103,6 +94,17 @@ int main(int argc, char** argv)
             renderer.BeginFrame();
             renderer.RenderFrame();
             renderer.EndFrame();
+
+            auto currentTime = std::chrono::high_resolution_clock::now();
+            float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+            iters += 0.001;
+            UniformBufferObject ubo = {
+                .model = glm::rotate(glm::mat4(1.0f), iters * glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+                .view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+                .proj = glm::perspective(glm::radians(45.0f), (float)1280 / (float)720, 0.1f, 10.0f)
+            };
+            ubo.proj[1][1] *= -1;
+            uniformBuffer.Update(&ubo, renderer.GetCurrentFrame());
 
         }
     }

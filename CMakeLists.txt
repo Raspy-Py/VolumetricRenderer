@@ -29,8 +29,8 @@ endif()
 include(cmake/CompilerWarnings.cmake)
 
 # Shortcuts
-set(SOURCE_DIR  ${CMAKE_SOURCE_DIR}/source)
-set(VENDOR_DIR  ${CMAKE_SOURCE_DIR}/vendor)
+set(SOURCE_DIR  ${CMAKE_SOURCE_DIR}/Source)
+set(VENDOR_DIR  ${CMAKE_SOURCE_DIR}/Vendor)
 
 set(IMGUI_DIR ${VENDOR_DIR}/imgui)
 set(GLFW_DIR ${VENDOR_DIR}/glfw)
@@ -57,6 +57,9 @@ set(LOGURU_WITH_STREAMS TRUE)
 add_subdirectory(${LOGURU_DIR}) # defines target 'loguru::loguru'
 include_directories(${LOGURU_DIR})
 
+# STB image
+include_directories(${VENDOR_DIR}/stb)
+
 # Libraries
 find_package(Vulkan REQUIRED)
 set(LIBRARIES "glfw;Vulkan::Vulkan;loguru::loguru")
@@ -66,7 +69,15 @@ include_directories(${GLFW_DIR}/deps)
 
 file(GLOB_RECURSE sources ${SOURCE_DIR}/*)
 
-add_executable(${PROJECT_NAME} ${sources} ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp ${IMGUI_DIR}/imgui.cpp ${IMGUI_DIR}/imgui_draw.cpp ${IMGUI_DIR}/imgui_demo.cpp ${IMGUI_DIR}/imgui_tables.cpp ${IMGUI_DIR}/imgui_widgets.cpp)
+add_executable(${PROJECT_NAME} ${sources}
+        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+)
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DImTextureID=ImU64)
 
@@ -74,7 +85,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DImTextureID=ImU64)
 # Installation
 install(PROGRAMS
         $<TARGET_FILE:${PROJECT_NAME}>
-        DESTINATION bin)
+        DESTINATION Bin)
 
 set(ALL_TARGETS ${PROJECT_NAME})
 

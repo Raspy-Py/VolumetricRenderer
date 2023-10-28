@@ -19,7 +19,7 @@ void LogsInit()
 	loguru::g_stderr_verbosity	= loguru::Verbosity_OFF;
 
 	// Hardcoded values I don't care about
-	const std::string logsDirectory = "./logs/";
+	const std::string logsDirectory = "../Logs/";
 	const std::string logsFile = "latest";
 	const std::string logsFileExtension = ".log";
 	std::string fullName = logsDirectory + logsFile + logsFileExtension;

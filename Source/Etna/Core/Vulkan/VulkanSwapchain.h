@@ -34,6 +34,8 @@ namespace vkc
         [[nodiscard]] VkExtent2D GetExtent() const      { return Extent; }
         [[nodiscard]] const std::vector<VkImageView>& GetImageViews() const { return ImageViews; }
 
+        void LogStatistics();
+
     private:
         VkSwapchainKHR Handle;
 

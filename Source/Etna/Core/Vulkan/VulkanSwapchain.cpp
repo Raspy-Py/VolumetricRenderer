@@ -6,6 +6,10 @@
 #include "VulkanContext.h"
 
 #include <limits>
+#include <algorithm>
+
+// Debug stuff
+static std::vector<int> g_ImageOccurrences;
 
 namespace vkc
 {
@@ -14,6 +18,8 @@ namespace vkc
         VkResult result = vkAcquireNextImageKHR(
             Context::GetDevice(), Handle, UINT64_MAX,
             semaphore, VK_NULL_HANDLE, &CurrentImage);
+
+        g_ImageOccurrences[CurrentImage]++;
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
@@ -54,6 +60,19 @@ namespace vkc
         }
 
         return false;
+    }
+
+    void Swapchain::LogStatistics()
+    {
+        auto maxElement = std::max_element(g_ImageOccurrences.begin(), g_ImageOccurrences.end());
+        if (*maxElement == 0)
+        {
+            Error("Swapchain was never used. No statistics to show.");
+        }
+        for (uint32_t i = 0; i < ImageCount; ++i)
+        {
+            InfoLog("Image[%i] totally acquired %i times, which is %f", i, g_ImageOccurrences[i], (float)g_ImageOccurrences[i] / *maxElement);
+        }
     }
 
     SwapchainBuilder& SwapchainBuilder::SetOldSwapchain(vkc::Swapchain *oldSwapchain)
@@ -146,6 +165,10 @@ namespace vkc
 
         // We can afford a full copy, as it only owns the handles of Vulkan objects
         // not the objects themselves
+
+        g_ImageOccurrences.clear();
+        g_ImageOccurrences.resize(swapchain.ImageCount);
+
         return swapchain;
     }
 
@@ -168,10 +191,11 @@ namespace vkc
         {
             if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
             {
+                InfoLog("Enabled present mode: VK_PRESENT_MODE_MAILBOX_KHR");
                 return presentMode;
             }
         }
-
+        InfoLog("Enabled present mode: VK_PRESENT_MODE_FIFO_KHR");
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 

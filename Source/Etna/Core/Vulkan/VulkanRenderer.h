@@ -89,6 +89,7 @@ namespace vkc
                                RenderPassDelegate&& delegate = [](RenderPassContext){});
 
         [[nodiscard]] VkFormat GetSwapchainImageFormat() const;
+        [[nodiscard]] uint32_t GetSwapchainImageCount() const;
         [[nodiscard]] uint32_t GetSwapchainCurrentImage() const;
         [[nodiscard]] VkExtent2D GetSwapchainExtent() const;
 
