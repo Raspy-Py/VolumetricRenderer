@@ -14,15 +14,21 @@
 
 struct Vertex
 {
-    glm::vec3 pos;
-    glm::vec2 texCoord;
+    glm::vec3 Position;
+    glm::vec2 TexCoord;
 };
 
-struct UniformBufferObject
+struct ObjectShaderData
 {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    glm::mat4 Model;
+    glm::mat4 View;
+    glm::mat4 Projection;
+};
+
+struct GlobalShaderData
+{
+    glm::mat4 WorldToLocal;
+    glm::vec3 CameraPosition;
 };
 
 int main(int argc, char** argv)
@@ -56,27 +62,33 @@ int main(int argc, char** argv)
     renderer.Init();
     // All vulkanish code should go inside the following scope
     {
-        vkc::Texture2D texture("../assets/images/Johny.jpg");
-
         vkc::IndexBuffer indexBuffer(vkc::Context::GetTransferCommandPool(), indices.data(), indices.size());
         vkc::VertexBuffer<Vertex> vertexBuffer(vkc::Context::GetTransferCommandPool(), vertices.data(), vertices.size());
-        vkc::UniformBuffer<UniformBufferObject> uniformBuffer(renderer.GetFramesCount());
+
+        vkc::Texture2D texture("../assets/images/Johny.jpg");
+        vkc::UniformBuffer<ObjectShaderData> objectUniformBuffer(renderer.GetFramesCount());
+        vkc::UniformBuffer<GlobalShaderData> globalUniformBuffer(renderer.GetFramesCount());
 
         auto perFrameLayout = vkc::DescriptorSetLayout::Builder{}
             .AddBinding(0, vkc::DescriptorType::UniformBuffer, vkc::ShaderStage::Vertex)
-            .AddBinding(1, vkc::DescriptorType::CombinedImageSampler, vkc::ShaderStage::Fragment)
+            .AddBinding(1, vkc::DescriptorType::UniformBuffer, vkc::ShaderStage::Fragment)
+            .AddBinding(2, vkc::DescriptorType::CombinedImageSampler, vkc::ShaderStage::Fragment)
             .Build();
         auto perFramePool = std::make_unique<vkc::DescriptorSetPool>(*perFrameLayout, renderer.GetFramesCount());
         auto layouts = {
             perFrameLayout->Handle,
         };
         std::vector<VkDescriptorSet> perFrameSets;
-        for (auto buffer : uniformBuffer.Buffers)
+        for (uint32_t i = 0; i < renderer.GetFramesCount(); i++)
         {
+            auto objectBuffer = objectUniformBuffer.Buffers[i];
+            auto globalBuffer = globalUniformBuffer.Buffers[i];
+
             perFrameSets.push_back(
                 vkc::DescriptorSetWriter{*perFrameLayout, *perFramePool}
-                    .WriteBuffer(0, buffer, 0, sizeof(UniformBufferObject))
-                    .WriteImage(1, texture.GetView(), texture.GetSampler())
+                    .WriteBuffer(0, objectBuffer, 0, sizeof(ObjectShaderData))
+                    .WriteBuffer(1, globalBuffer, 0, sizeof(GlobalShaderData))
+                    .WriteImage(2, texture.GetView(), texture.GetSampler())
                     .Write()
             );
         }
@@ -130,15 +142,22 @@ int main(int argc, char** argv)
             // Update MVP matrix
             auto currentTime = std::chrono::high_resolution_clock::now();
             float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-            UniformBufferObject ubo = {
-                .model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-                .view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-                .proj = glm::perspective(glm::radians(45.0f), (float)1280 / (float)720, 0.1f, 10.0f)
+            ObjectShaderData osd = {
+                .Model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+                .View = glm::lookAt(glm::vec3(3.0f, 3.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+                .Projection = glm::perspective(glm::radians(45.0f), (float)1280 / (float)720, 0.1f, 10.0f)
             };
-            ubo.proj[1][1] *= -1;
-            uniformBuffer.Update(&ubo, renderer.GetCurrentFrame());
+            osd.Projection[1][1] *= -1;
 
+            glm::mat4 worldToLocal = glm::inverse(osd.Model);
 
+            GlobalShaderData gsd = {
+                .WorldToLocal = worldToLocal,
+                .CameraPosition = glm::vec3(3.0f, 3.0f, 3.0f)
+            };
+
+            objectUniformBuffer.Update(&osd, renderer.GetCurrentFrame());
+            globalUniformBuffer.Update(&gsd, renderer.GetCurrentFrame());
 
             renderer.RenderFrame();
             renderer.EndFrame();

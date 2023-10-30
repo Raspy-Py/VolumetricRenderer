@@ -105,6 +105,8 @@ namespace vkc
         , Pool(pool)
     {
         Set = Pool.AllocateSet(Layout);
+        ImageInfos.reserve(16); // -_-
+        BufferInfos.reserve(16);
     }
 
     DescriptorSetWriter &DescriptorSetWriter::WriteBuffer(
