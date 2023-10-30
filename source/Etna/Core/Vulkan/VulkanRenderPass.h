@@ -20,7 +20,7 @@ namespace vkc
         std::string VertexShaderPath;
         std::string FragmentShaderPath;
         VertexLayout VertexLayoutInfo;
-        VkDescriptorSetLayout DescriptorSetLayout;
+        std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
     };
 
     class RenderPass

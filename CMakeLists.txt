@@ -29,8 +29,8 @@ endif()
 include(cmake/CompilerWarnings.cmake)
 
 # Shortcuts
-set(SOURCE_DIR  ${CMAKE_SOURCE_DIR}/Source)
-set(VENDOR_DIR  ${CMAKE_SOURCE_DIR}/Vendor)
+set(SOURCE_DIR  ${CMAKE_SOURCE_DIR}/source)
+set(VENDOR_DIR  ${CMAKE_SOURCE_DIR}/vendor)
 
 set(IMGUI_DIR ${VENDOR_DIR}/imgui)
 set(GLFW_DIR ${VENDOR_DIR}/glfw)

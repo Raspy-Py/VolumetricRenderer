@@ -11,7 +11,7 @@
 namespace vkc
 {
     template <class T>
-    class UniformBuffer : public DescriptiveBufferInterface
+    class UniformBuffer
     {
     public:
         UniformBuffer(uint32_t count = 1);
@@ -21,12 +21,6 @@ namespace vkc
         ~UniformBuffer() = default;
 
         void Update(const T* data, uint32_t index = 0);
-
-    public:
-        // From DescriptiveBufferInterface
-
-        VkDescriptorSetLayout CreateDescriptorSetLayout(uint32_t binding, ShaderStage shaderStage) override;
-        std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorSetLayout layout, const vkc::DescriptorPool& pool) override;
 
     public:
         // Vulkan supports several frames in flight,
@@ -64,22 +58,6 @@ namespace vkc
     void UniformBuffer<T>::Update(const T *data, uint32_t index)
     {
         memcpy(HostMappings[index], data, sizeof(T));
-    }
-
-    template <class T>
-    VkDescriptorSetLayout UniformBuffer<T>::CreateDescriptorSetLayout(uint32_t binding, ShaderStage shaderStage)
-    {
-        return vkc::CreateDescriptorSetLayout(binding, vkc::DescriptorType::UniformBuffer, shaderStage);
-    }
-
-    template <class T>
-    std::vector<VkDescriptorSet> UniformBuffer<T>::CreateDescriptorSets(VkDescriptorSetLayout layout, const vkc::DescriptorPool& pool)
-    {
-        std::vector<VkDescriptorSet> sets(Buffers.size());
-        vkc::AllocateDescriptorSets(layout, pool.Handle, sets.data(), sets.size());
-        vkc::UpdateBufferDescriptorSets<T>(Buffers.data(), sets.data(), sets.size());
-
-        return sets;
     }
 }
 #endif //VULKANUNIFORMBUFFER_H

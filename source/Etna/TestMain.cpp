@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     renderer.Init();
     // All vulkanish code should go inside the following scope
     {
-        vkc::Texture texture("../Assets/Images/Johny.jpg");
+        vkc::Texture texture("../assets/images/Johny.jpg");
 
         vkc::IndexBuffer indexBuffer(vkc::Context::GetTransferCommandPool(), indices.data(), indices.size());
         vkc::VertexBuffer<Vertex> vertexBuffer(vkc::Context::GetTransferCommandPool(), vertices.data(), vertices.size());

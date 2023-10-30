@@ -55,13 +55,15 @@ namespace vkc
             Error("Failed to create render pass.");
         }
 
-        RenderPipeline = PipelineBuilder{}
+        auto pipelineBuilder = PipelineBuilder{}
             .SetRenderPass(Handle)
             .SetVertexLayout(initInfo.VertexLayoutInfo)
             .SetVertexShader(initInfo.VertexShaderPath)
-            .SetFragmentShader(initInfo.FragmentShaderPath)
-            .AddDescriptorSetLayout(initInfo.DescriptorSetLayout)
-            .Build();
+            .SetFragmentShader(initInfo.FragmentShaderPath);
+        for (auto& layout : initInfo.DescriptorSetLayouts)
+            pipelineBuilder.AddDescriptorSetLayout(layout);
+
+        RenderPipeline = pipelineBuilder.Build();
     }
 
     void RenderPass::Begin(VkCommandBuffer commandBuffer, VkFramebuffer framebuffer, VkRect2D renderArea)
