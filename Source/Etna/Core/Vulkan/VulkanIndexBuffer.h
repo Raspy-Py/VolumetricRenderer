@@ -16,7 +16,7 @@ namespace vkc
 
         ~IndexBuffer() override = default;
 
-        void Update(VkCommandPool cmdPool, uint16_t* data);
+        void Update(uint16_t* data);
         void Bind(VkCommandBuffer commandBuffer, uint32_t imageIndex) override;
 
     private:

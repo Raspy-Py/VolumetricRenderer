@@ -28,10 +28,10 @@ namespace vkc
             Memory
         );
 
-        Update(cmdPool, data);
+        Update(data);
     }
 
-    void IndexBuffer::Update(VkCommandPool cmdPool, uint16_t *data)
+    void IndexBuffer::Update(uint16_t *data)
     {
         /*
          * Index buffer uses device local memory, which is not visible to the CPU,
@@ -52,7 +52,7 @@ namespace vkc
         );
 
         FillBuffer(stagingBufferMemory, data, Size);
-        CopyBuffer(cmdPool, stagingBuffer, Buffer, Size);
+        CopyBuffer(stagingBuffer, Buffer, Size);
 
         vkDestroyBuffer(Context::GetDevice(), stagingBuffer, Context::GetAllocator());
         vkFreeMemory(Context::GetDevice(), stagingBufferMemory, Context::GetAllocator());

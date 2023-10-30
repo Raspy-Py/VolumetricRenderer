@@ -95,6 +95,7 @@ namespace vkc
             createInfo.enabledLayerCount = 0;
 
             VkPhysicalDeviceFeatures deviceFeatures{};
+            deviceFeatures.samplerAnisotropy = VK_TRUE;
 
             createInfo.pEnabledFeatures = &deviceFeatures;
 

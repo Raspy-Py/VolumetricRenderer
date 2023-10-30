@@ -4,6 +4,8 @@
 #include "Core/Vulkan/VulkanVertexBuffer.h"
 #include "Core/Vulkan/VulkanIndexBuffer.h"
 #include "Core/Vulkan/VulkanUniformBuffer.h"
+#include "Core/Vulkan/VulkanTexture.h"
+#include "Core/Vulkan/VulkanDescriptors.h"
 
 #include "Core/Utils.h"
 
@@ -14,6 +16,7 @@ struct Vertex
 {
     glm::vec2 pos;
     glm::vec3 color;
+    glm::vec2 texCoord;
 };
 
 struct UniformBufferObject
@@ -26,10 +29,10 @@ struct UniformBufferObject
 int main(int argc, char** argv)
 {
     std::vector<Vertex> vertices = {
-        {{-1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}},
-        {{1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}},
-        {{1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-        {{-1.0f, 1.0f}, {1.0f, 0.5f, 1.0f}}
+        {{-1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+        {{1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+        {{1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+        {{-1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
     };
 
     std::vector<uint16_t> indices = {
@@ -40,18 +43,35 @@ int main(int argc, char** argv)
 
     LogsInit();
     glfwInit();
-    float iters = 0;
 
     vkc::Renderer renderer;
     renderer.Init();
+    // All vulkanish code should go inside the following scope
     {
+        vkc::Texture texture("../Assets/Images/Johny.jpg");
+
         vkc::IndexBuffer indexBuffer(vkc::Context::GetTransferCommandPool(), indices.data(), indices.size());
         vkc::VertexBuffer<Vertex> vertexBuffer(vkc::Context::GetTransferCommandPool(), vertices.data(), vertices.size());
         vkc::UniformBuffer<UniformBufferObject> uniformBuffer(renderer.GetFramesCount());
 
-        auto descriptorPool = vkc::DescriptorPool(vkc::DescriptorType::UniformBuffer, renderer.GetFramesCount());
-        auto descriptorSetLayouts = uniformBuffer.CreateDescriptorSetLayout(0, vkc::ShaderStage::Vertex);
-        auto descriptorSets = uniformBuffer.CreateDescriptorSets(descriptorSetLayouts, descriptorPool);
+        auto perFrameLayout = vkc::DescriptorSetLayout::Builder{}
+            .AddBinding(0, vkc::DescriptorType::UniformBuffer, vkc::ShaderStage::Vertex)
+            .AddBinding(1, vkc::DescriptorType::CombinedImageSampler, vkc::ShaderStage::Fragment)
+            .Build();
+        auto perFramePool = std::make_unique<vkc::DescriptorSetPool>(*perFrameLayout, renderer.GetFramesCount());
+        auto layouts = {
+            perFrameLayout->Handle,
+        };
+        std::vector<VkDescriptorSet> perFrameSets;
+        for (auto buffer : uniformBuffer.Buffers)
+        {
+            perFrameSets.push_back(
+                vkc::DescriptorSetWriter{*perFrameLayout, *perFramePool}
+                    .WriteBuffer(0, buffer, 0, sizeof(UniformBufferObject))
+                    .WriteImage(1, texture.GetView(), texture.GetSampler())
+                    .Write()
+            );
+        }
 
         vkc::RenderPassCreateInfo createInfo = {
             .DepthEnabled = false,
@@ -59,8 +79,8 @@ int main(int argc, char** argv)
             .TargetFormat = renderer.GetSwapchainImageFormat(),
             .VertexShaderPath = "shaders/vert.spv",
             .FragmentShaderPath = "shaders/frag.spv",
-            .VertexLayoutInfo = vkc::CreateVertexLayout<glm::vec2, glm::vec3>(),
-            .DescriptorSetLayout = descriptorSetLayouts
+            .VertexLayoutInfo = vkc::CreateVertexLayout<glm::vec2, glm::vec3, glm::vec2>(),
+            .DescriptorSetLayouts = layouts
         };
 
         renderer.AddPresentPass("base_pass", createInfo);
@@ -73,7 +93,7 @@ int main(int argc, char** argv)
             VkRect2D rect = {{0,0}, renderer.GetSwapchainExtent()};
 
             renderer.EnqueuePresentPass("base_pass", rect,
-                [rect, &descriptorSets, &indexBuffer, &vertexBuffer, indicesCount]
+                [rect, &perFrameSets, &indexBuffer, &vertexBuffer, indicesCount]
                 (vkc::RenderPassContext rpc)
                 {
                     VkViewport viewport = {
@@ -86,8 +106,14 @@ int main(int argc, char** argv)
                     vkCmdSetScissor(rpc.CommandBuffer, 0, 1, &scissor);
                     indexBuffer.Bind(rpc.CommandBuffer, 0);
                     vertexBuffer.Bind(rpc.CommandBuffer, 0);
-                    vkCmdBindDescriptorSets(rpc.CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, rpc.PipelineLayout,
-                                            0, 1, &descriptorSets[rpc.FrameIndex], 0, nullptr);
+                    // Bind per frame sets
+                    vkCmdBindDescriptorSets(
+                        rpc.CommandBuffer,
+                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        rpc.PipelineLayout, 0, 1,
+                        &perFrameSets[rpc.FrameIndex],
+                        0, nullptr
+                    );
                     vkCmdDrawIndexed(rpc.CommandBuffer, indicesCount, 1, 0, 0, 0);
                 });
 
@@ -95,18 +121,19 @@ int main(int argc, char** argv)
             renderer.RenderFrame();
             renderer.EndFrame();
 
+            // Update MVP matrix
             auto currentTime = std::chrono::high_resolution_clock::now();
             float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-            iters += 0.001;
             UniformBufferObject ubo = {
-                .model = glm::rotate(glm::mat4(1.0f), iters * glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+                .model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
                 .view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
                 .proj = glm::perspective(glm::radians(45.0f), (float)1280 / (float)720, 0.1f, 10.0f)
             };
             ubo.proj[1][1] *= -1;
             uniformBuffer.Update(&ubo, renderer.GetCurrentFrame());
-
         }
+
+        vkDeviceWaitIdle(vkc::Context::GetDevice());
     }
     renderer.Shutdown();
 

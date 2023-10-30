@@ -76,81 +76,68 @@ namespace vkc
         std::vector<VkPresentModeKHR> PresentModes;
     };
 
-    struct DescriptorPool
-    {
-        /// Set free to true to allow vkFreeDescriptorSets(...)
-        DescriptorPool(DescriptorType type, uint32_t maxSets, bool free = false);
-        ~DescriptorPool();
-
-        DescriptorType Type;
-        VkDescriptorPool Handle;
-    };
-
     /*
      * Classes
      */
 
-
-
-    /*
-     * Interfaces
-     */
-
-    class DescriptiveBufferInterface
-    {
-    public:
-        virtual VkDescriptorSetLayout CreateDescriptorSetLayout(uint32_t binding, ShaderStage shaderStage) = 0;
-        virtual std::vector<VkDescriptorSet> CreateDescriptorSets(VkDescriptorSetLayout layout, const vkc::DescriptorPool& pool) = 0;
-    };
 
     /*
      * Utility functions
      */
 
     /// Fill VkBuffer's memory with data of given size
-    void FillBuffer(VkDeviceMemory memory, void* data, VkDeviceSize size);
+    void FillBuffer(VkDeviceMemory memory, void *data, VkDeviceSize size);
 
     /// Copies memory region from VkBuffer src to VkBuffer dest
-    void CopyBuffer(VkCommandPool cmdPool, VkBuffer src, VkBuffer dest, VkDeviceSize size);
+    void CopyBuffer(VkBuffer src, VkBuffer dest, VkDeviceSize size);
+
+    /// Copy buffer contents into an image
+    void CopyBufferImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+    /// For executing single time commands like buffer coping or layout transition
+    VkCommandBuffer BeginSingleTimeCommands();
+    void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+    void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
     /// Returns queue family indices on given GPU
     QueueFamilyIndices GetQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
 
     /// Fills debug messenger creation structure.
-    void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+    void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
 
     /// Returns image format, extent and present mode, supported by a given GPU
     void GetSwapChainSupportDetails(
         SwapChainSupportDetails &swapChainSupportDetails,
-        VkPhysicalDevice        device,
-        VkSurfaceKHR            surface);
+        VkPhysicalDevice device,
+        VkSurfaceKHR surface);
 
     void UpdateImageDescriptorSets(
-        VkSampler*          samplers,
-        VkImageView*        views,
-        VkImageLayout*      layouts,
-        VkDescriptorSet*    sets,
-        uint32_t            count = 1);
+        VkSampler *samplers,
+        VkImageView *views,
+        VkImageLayout *layouts,
+        VkDescriptorSet *sets,
+        uint32_t count = 1);
 
     void AllocateDescriptorSets(
-        VkDescriptorSetLayout   layout,
-        VkDescriptorPool        pool,
-        VkDescriptorSet*        sets,
-        uint32_t                count = 1);
+        VkDescriptorSetLayout layout,
+        VkDescriptorPool pool,
+        VkDescriptorSet *sets,
+        uint32_t count = 1);
 
     VkFormat FindDepthFormat();
 
     VkFormat FindSupportedFormat(
         const std::vector<VkFormat> &candidates,
-        VkImageTiling               tiling,
-        VkFormatFeatureFlags        features);
+        VkImageTiling tiling,
+        VkFormatFeatureFlags features);
 
 
-    template <typename BufferObjectType>
+    template<typename BufferObjectType>
     void UpdateBufferDescriptorSets(
-        VkBuffer*           buffers,
-        VkDescriptorSet*    sets,
-        uint32_t            count)
+        VkBuffer *buffers,
+        VkDescriptorSet *sets,
+        uint32_t count)
     {
         for (uint32_t i = 0; i < count; i++)
         {
@@ -185,33 +172,51 @@ namespace vkc
 
     VkCommandBuffer CreateCommandBuffer(VkCommandPool commandPool);
 
-    void CreateCommandBuffers(VkCommandPool commandPool, VkCommandBuffer* buffers, uint32_t count);
+    void CreateCommandBuffers(VkCommandPool commandPool, VkCommandBuffer *buffers, uint32_t count);
 
     uint32_t ChooseMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
-    void CreateSemaphores(VkSemaphore* semaphores, uint32_t count = 1);
+    void CreateSemaphores(VkSemaphore *semaphores, uint32_t count = 1);
 
-    void CreateFences(VkFence* fences, uint32_t count = 1);
+    void CreateFences(VkFence *fences, uint32_t count = 1);
+
+    VkImageView CreateImageView(VkImage image, VkFormat format);
+
+    VkSampler CreateSampler();
 
     VkDescriptorSetLayout CreateDescriptorSetLayout(
-        uint32_t        binding,
-        DescriptorType  type,
-        ShaderStage     shaderStage);
+        const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
     void CreateBuffer(
-        VkDeviceSize			size,
-        VkBufferUsageFlags		usage,
-        VkMemoryPropertyFlags	properties,
-        VkBuffer&				buffer,
-        VkDeviceMemory&			bufferMemory);
+        VkDeviceSize size,
+        VkBufferUsageFlags usage,
+        VkMemoryPropertyFlags properties,
+        VkBuffer &buffer,
+        VkDeviceMemory &bufferMemory);
 
     void CreateFramebuffers(
-        VkFramebuffer*  framebuffers,
-        VkRenderPass    renderPass, 
-        VkExtent2D      extent,
-        const VkImageView*    colorAttachments,
-        const VkImageView*    depthAttachments = nullptr,
-        uint32_t        count = 1);
+        VkFramebuffer *framebuffers,
+        VkRenderPass renderPass,
+        VkExtent2D extent,
+        const VkImageView *colorAttachments,
+        const VkImageView *depthAttachments = nullptr,
+        uint32_t count = 1);
+
+    void CreateImage(
+        uint32_t width,
+        uint32_t height,
+        VkFormat format,
+        VkImageTiling tiling,
+        VkImageUsageFlags usage,
+        VkMemoryPropertyFlags properties,
+        VkImage &image,
+        VkDeviceMemory &imageMemory);
+
+    VkDescriptorSetLayoutBinding CreateDescriptorSetLayoutBinding(
+        uint32_t binding,
+        uint32_t count,
+        ShaderStage shaderStage,
+        DescriptorType type);
 }
 
 #endif //VULKANCORE_H

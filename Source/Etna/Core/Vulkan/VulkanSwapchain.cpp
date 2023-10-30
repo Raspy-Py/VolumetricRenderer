@@ -245,7 +245,7 @@ namespace vkc
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 1;
 
-            if (vkCreateImageView(Context::GetDevice(), &createInfo, nullptr, &swapchain.ImageViews[i]) != VK_SUCCESS)
+            if (vkCreateImageView(Context::GetDevice(), &createInfo, Context::GetAllocator(), &swapchain.ImageViews[i]) != VK_SUCCESS)
             {
                 Error("Failed to create swapchain image view.");
             }

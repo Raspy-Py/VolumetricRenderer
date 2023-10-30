@@ -77,7 +77,7 @@ namespace  vkc
         );
 
         FillBuffer(stagingBufferMemory, data, Size);
-        CopyBuffer(cmdPool, stagingBuffer, Buffer, Size);
+        CopyBuffer(stagingBuffer, Buffer, Size);
 
         vkDestroyBuffer(Context::GetDevice(), stagingBuffer, Context::GetAllocator());
         vkFreeMemory(Context::GetDevice(), stagingBufferMemory, Context::GetAllocator());

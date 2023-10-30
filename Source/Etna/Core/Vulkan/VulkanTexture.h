@@ -3,7 +3,6 @@
 
 #include "VulkanCore.h"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <string>
 
@@ -15,12 +14,17 @@ namespace vkc
         explicit Texture(const std::string& imagePath);
         ~Texture();
 
+        [[nodiscard]] VkImageView GetView() const { return ImageView; }
+        [[nodiscard]] VkSampler GetSampler() const { return Sampler; }
+
     private:
         int Width;
         int Height;
         int Channels;
 
         VkImage Image;
+        VkSampler Sampler;
+        VkImageView ImageView;
         VkDeviceMemory Memory;
     };
 }

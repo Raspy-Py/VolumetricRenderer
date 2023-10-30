@@ -77,6 +77,7 @@ add_executable(${PROJECT_NAME} ${sources}
         ${IMGUI_DIR}/imgui_demo.cpp
         ${IMGUI_DIR}/imgui_tables.cpp
         ${IMGUI_DIR}/imgui_widgets.cpp
+        ${VENDOR_DIR}/stb/stb_image.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DImTextureID=ImU64)
