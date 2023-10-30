@@ -48,11 +48,13 @@ namespace vkc
         PipelineBuilder& SetRenderPass(VkRenderPass renderPass);
         PipelineBuilder& AddDescriptorSetLayout(VkDescriptorSetLayout layout);
         PipelineBuilder& AddPushConstantRange(VkPushConstantRange range);
+        PipelineBuilder& EnableDepthTesting(bool flag);
         
         Pipeline Build();
 
 
     private:
+        bool DepthTestingEnabled = false;
         VkRenderPass RenderPass;
         VertexLayout VertexLayoutInfo;
         std::string VertexShaderPath;

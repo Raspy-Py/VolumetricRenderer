@@ -127,6 +127,8 @@ namespace vkc
 
     VkFormat FindDepthFormat();
 
+    bool HasStencilComponent(VkFormat format);
+
     VkFormat FindSupportedFormat(
         const std::vector<VkFormat> &candidates,
         VkImageTiling tiling,
@@ -180,7 +182,11 @@ namespace vkc
 
     void CreateFences(VkFence *fences, uint32_t count = 1);
 
-    VkImageView CreateImageView(VkImage image, VkFormat format);
+    VkImageView CreateImageView(
+        VkImage image,
+        VkFormat format,
+        VkImageViewType type = VK_IMAGE_VIEW_TYPE_2D,
+        VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
 
     VkSampler CreateSampler();
 
@@ -202,9 +208,21 @@ namespace vkc
         const VkImageView *depthAttachments = nullptr,
         uint32_t count = 1);
 
+    void CreateImage2D(
+        uint32_t width,
+        uint32_t height,
+        VkFormat format,
+        VkImageTiling tiling,
+        VkImageUsageFlags usage,
+        VkMemoryPropertyFlags properties,
+        VkImage &image,
+        VkDeviceMemory &imageMemory);
+
     void CreateImage(
         uint32_t width,
         uint32_t height,
+        uint32_t depth,
+        VkImageType type,
         VkFormat format,
         VkImageTiling tiling,
         VkImageUsageFlags usage,

@@ -219,6 +219,27 @@ namespace vkc
         }
 
         auto &pass = ptr->second;
+        const VkImageView* depthView = nullptr;
+
+        if (initInfo.DepthEnabled)
+        {
+            pass.DepthBufferTexture = std::make_unique<Texture2D>();
+
+            Texture2D::CreateDepthBuffer(
+                *pass.DepthBufferTexture,
+                static_cast<int>(GSwapchain.GetExtent().width),
+                static_cast<int>(GSwapchain.GetExtent().height)
+            );
+
+            depthView = &pass.DepthBufferTexture->GetView();
+
+            TransitionImageLayout(
+                pass.DepthBufferTexture->GetImage(),
+                pass.DepthBufferTexture->GetFormat(),
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+            );
+        }
 
         pass.Framebuffers.resize(GSwapchain.GetImageCount());
         vkc::CreateFramebuffers(
@@ -226,7 +247,7 @@ namespace vkc
             pass.Pass->Handle,
             GSwapchain.GetExtent(),
             GSwapchain.GetImageViews().data(),
-            nullptr,
+            depthView,
             pass.Framebuffers.size());
     }
 

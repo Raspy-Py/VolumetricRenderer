@@ -14,8 +14,7 @@
 
 struct Vertex
 {
-    glm::vec2 pos;
-    glm::vec3 color;
+    glm::vec3 pos;
     glm::vec2 texCoord;
 };
 
@@ -29,14 +28,23 @@ struct UniformBufferObject
 int main(int argc, char** argv)
 {
     std::vector<Vertex> vertices = {
-        {{-1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-        {{1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-        {{1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-        {{-1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+        {{1.0, -1.0, -1.0}, {1.0, 0.0}},
+        {{1.0, -1.0, 1.0}, {1.0, 1.0}},
+        {{-1.0, -1.0, 1.0}, {0.0, 1.0}},
+        {{-1.0, -1.0, -1.0}, {0.0, 0.0}},
+        {{1.0, 1.0, -1.0}, {1.0, 0.0}},
+        {{1.0, 1.0, 1.0}, {1.0, 1.0}},
+        {{-1.0, 1.0, 1.0}, {0.0, 1.0}},
+        {{-1.0, 1.0, -1.0}, {0.0, 0.0}}
     };
 
     std::vector<uint16_t> indices = {
-        0, 1, 2, 2, 3, 0
+        0, 1, 2, 0, 2, 3,
+        3, 2, 6, 3, 6, 7,
+        0, 3, 7, 0, 7, 4,
+        4, 7, 6, 4, 6, 5,
+        1, 5, 6, 1, 6, 2,
+        4, 5, 1, 4, 1, 0
     };
 
     uint32_t indicesCount = indices.size();
@@ -48,7 +56,7 @@ int main(int argc, char** argv)
     renderer.Init();
     // All vulkanish code should go inside the following scope
     {
-        vkc::Texture texture("../assets/images/Johny.jpg");
+        vkc::Texture2D texture("../assets/images/Johny.jpg");
 
         vkc::IndexBuffer indexBuffer(vkc::Context::GetTransferCommandPool(), indices.data(), indices.size());
         vkc::VertexBuffer<Vertex> vertexBuffer(vkc::Context::GetTransferCommandPool(), vertices.data(), vertices.size());
@@ -74,12 +82,12 @@ int main(int argc, char** argv)
         }
 
         vkc::RenderPassCreateInfo createInfo = {
-            .DepthEnabled = false,
+            .DepthEnabled = true,
             .Type = vkc::RenderPassType::Graphic,
             .TargetFormat = renderer.GetSwapchainImageFormat(),
             .VertexShaderPath = "shaders/vert.spv",
             .FragmentShaderPath = "shaders/frag.spv",
-            .VertexLayoutInfo = vkc::CreateVertexLayout<glm::vec2, glm::vec3, glm::vec2>(),
+            .VertexLayoutInfo = vkc::CreateVertexLayout<glm::vec3, glm::vec2>(),
             .DescriptorSetLayouts = layouts
         };
 
@@ -118,8 +126,6 @@ int main(int argc, char** argv)
                 });
 
             renderer.BeginFrame();
-            renderer.RenderFrame();
-            renderer.EndFrame();
 
             // Update MVP matrix
             auto currentTime = std::chrono::high_resolution_clock::now();
@@ -131,6 +137,11 @@ int main(int argc, char** argv)
             };
             ubo.proj[1][1] *= -1;
             uniformBuffer.Update(&ubo, renderer.GetCurrentFrame());
+
+
+
+            renderer.RenderFrame();
+            renderer.EndFrame();
         }
 
         vkDeviceWaitIdle(vkc::Context::GetDevice());

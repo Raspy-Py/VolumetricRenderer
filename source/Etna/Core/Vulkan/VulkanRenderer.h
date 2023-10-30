@@ -10,6 +10,7 @@
 #include "VulkanContext.h"
 #include "VulkanSwapchain.h"
 #include "VulkanRenderPass.h"
+#include "VulkanTexture.h"
 
 #include <map>
 #include <queue>
@@ -48,6 +49,7 @@ namespace vkc
         RenderPassDelegate Delegate;
         std::vector<VkFramebuffer> Framebuffers;
         std::unique_ptr<RenderPass> Pass;
+        std::unique_ptr<Texture2D> DepthBufferTexture;
     };
 
 

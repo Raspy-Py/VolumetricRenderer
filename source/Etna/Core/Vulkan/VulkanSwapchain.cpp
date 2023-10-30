@@ -10,15 +10,18 @@
 
 // Debug stuff
 static std::vector<int> g_ImageOccurrences;
+static uint32_t lastAcquired = 0;
+static uint32_t lastPresented = 0;
 
 namespace vkc
 {
     bool Swapchain::AcquireNextImage(VkSemaphore semaphore)
     {
+        CurrentImage = 0;
         VkResult result = vkAcquireNextImageKHR(
             Context::GetDevice(), Handle, UINT64_MAX,
             semaphore, VK_NULL_HANDLE, &CurrentImage);
-
+        lastAcquired = CurrentImage;
         g_ImageOccurrences[CurrentImage]++;
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
@@ -47,6 +50,7 @@ namespace vkc
         presentInfo.pImageIndices = &CurrentImage;
         presentInfo.pResults = nullptr;
 
+        lastPresented = CurrentImage;
         VkResult result = vkQueuePresentKHR(Context::GetPresentationQueue(), &presentInfo);
 
         // Check for swapchain result                                           // TODO: handle swapchain rebuild special case
@@ -58,7 +62,10 @@ namespace vkc
         {
             Error("Failed to present swapchain image.");
         }
-
+        if (lastAcquired != lastPresented)
+        {
+            InfoLog("Acquired: %i\t\t Presented: %i", (int) lastAcquired, (int) lastPresented);
+        }
         return false;
     }
 
@@ -187,6 +194,8 @@ namespace vkc
 
     VkPresentModeKHR SwapchainBuilder::ChooseSwapChainPresentMode(const std::vector<VkPresentModeKHR>& presentModes)
     {
+        return VK_PRESENT_MODE_FIFO_KHR;
+
         for (const auto& presentMode : presentModes)
         {
             if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)

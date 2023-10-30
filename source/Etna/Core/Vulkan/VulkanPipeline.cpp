@@ -123,8 +123,20 @@ namespace vkc
         multisampleInfo.alphaToCoverageEnable = VK_FALSE;
         multisampleInfo.alphaToOneEnable = VK_FALSE;
 
-        // TODO: configure depth stencil testing
         VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
+        if (DepthTestingEnabled)
+        {
+            depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+            depthStencilInfo.depthTestEnable = VK_TRUE;
+            depthStencilInfo.depthWriteEnable = VK_TRUE;
+            depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+            depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
+            depthStencilInfo.minDepthBounds = 0.0f; // Optional
+            depthStencilInfo.maxDepthBounds = 1.0f; // Optional
+            depthStencilInfo.stencilTestEnable = VK_FALSE;
+            depthStencilInfo.front = {}; // Optional
+            depthStencilInfo.back = {}; // Optional
+        }
 
         // Blending is disabled
         VkPipelineColorBlendAttachmentState colorBlendAttachment{};
@@ -170,7 +182,7 @@ namespace vkc
         pipelineInfo.pViewportState = &viewportInfo;
         pipelineInfo.pRasterizationState = &rasterizerInfo;
         pipelineInfo.pMultisampleState = &multisampleInfo;
-        pipelineInfo.pDepthStencilState = nullptr;
+        pipelineInfo.pDepthStencilState = &depthStencilInfo;
         pipelineInfo.pDynamicState = &dynamicStateInfo;
         pipelineInfo.pColorBlendState = &colorBlendInfo;
         pipelineInfo.layout = pipeline.Layout;
@@ -185,5 +197,11 @@ namespace vkc
         }
 
         return pipeline;
+    }
+
+    PipelineBuilder &PipelineBuilder::EnableDepthTesting(bool flag)
+    {
+        DepthTestingEnabled = flag;
+        return *this;
     }
 }
