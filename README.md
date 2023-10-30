@@ -8,7 +8,7 @@ The Volumetric Renderer project aims to create an efficient rendering solution u
 
 The project is organized into two primary branches:
 
-1. **main**: This branch serves as the foundation for future GUI integration. It includes a GUI skeleton that will be used to seamlessly incorporate our custom renderer. The main branch is perfect for those interested in the complete package of both rendering and user interface.
+1. **main**: This branch serves as the foundation for future GUI integration. It includes a GUI skeleton that will be used to seamlessly incorporate my custom renderer. The main branch is perfect for those interested in the complete package of both rendering and user interface.
 
 2. **no-gui**: The 'no-gui' branch focuses on the Vulkan renderer itself. It contains a wealth of useful tools and abstractions tailored for the development of Vulkan applications. This branch is ideal for users who require the rendering capabilities without the GUI components.
 
@@ -31,11 +31,7 @@ Please refer to the respective branch README files for detailed instructions on 
 
 ## Contributing
 
-We welcome contributions to the project. If you're interested in contributing, please follow our [Contribution Guidelines](CONTRIBUTING.md).
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
+We welcome contributions to the project. If you're interested in contributing, please contact me on github.
 
 ---
 
