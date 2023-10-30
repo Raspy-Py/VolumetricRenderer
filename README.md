@@ -20,6 +20,18 @@ The project is organized into two primary branches:
 - Abstractions and tools for Vulkan application development.
 - An expandable architecture designed to accommodate future enhancements and additions.
 
+## Installation
+
+To get started with the Volumetric Renderer project, follow these steps:
+
+1. Clone the repository, making sure to include the submodules:
+
+   ```bash
+    git clone --recurse-submodules --branch no-gui https://github.com/Raspy-Py/VolumetricRenderer.git
+    git submodule init
+    git submodule update
+   ```
+
 ## Getting Started
 
 To get started with the Volumetric Renderer project, you can clone the repository and choose the branch that suits your needs:
