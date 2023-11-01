@@ -8,3 +8,6 @@
 [submodule "glfw"]
 	path = vendor/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "vendor/noise"]
+	path = vendor/noise
+	url = https://github.com/Auburn/FastNoise2.git

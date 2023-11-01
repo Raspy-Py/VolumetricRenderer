@@ -35,6 +35,7 @@ set(VENDOR_DIR  ${CMAKE_SOURCE_DIR}/vendor)
 set(IMGUI_DIR ${VENDOR_DIR}/imgui)
 set(GLFW_DIR ${VENDOR_DIR}/glfw)
 set(LOGURU_DIR ${VENDOR_DIR}/loguru)
+set(FAST_NOISE_DIR ${VENDOR_DIR}/noise)
 
 include_directories(${PROJECT_NAME} ${SOURCE_DIR})
 include_directories(${PROJECT_NAME} ${SOURCE_DIR})
@@ -60,9 +61,13 @@ include_directories(${LOGURU_DIR})
 # STB image
 include_directories(${VENDOR_DIR}/stb)
 
+# FastNoise2
+add_subdirectory(${FAST_NOISE_DIR})
+include_directories(${FAST_NOISE_DIR})
+
 # Libraries
 find_package(Vulkan REQUIRED)
-set(LIBRARIES "glfw;Vulkan::Vulkan;loguru::loguru")
+set(LIBRARIES "glfw;Vulkan::Vulkan;loguru::loguru;FastNoise")
 
 # Use vulkan headers from glfw:
 include_directories(${GLFW_DIR}/deps)
