@@ -33,7 +33,6 @@ void main()
 
     float density = 0.3;
     float beerLambert = 1 - exp(density * min(intersection.x - intersection.y, 0));
-    vec4 color = vec4(0.3, 0.9, 0.2, 1.0);
+    vec4 color = vec4(0.9, 0.1, 0.1, 1.0);
     outColor = color * beerLambert;
-
 }
