@@ -612,7 +612,7 @@ namespace vkc
         EndSingleTimeCommands(commandBuffer);
     }
 
-    void CopyBufferImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+    void CopyBufferImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t depth)
     {
         auto commandBuffer = BeginSingleTimeCommands();
 
@@ -627,7 +627,7 @@ namespace vkc
         region.imageSubresource.layerCount = 1;
 
         region.imageOffset = {0, 0, 0};
-        region.imageExtent = {width, height, 1};
+        region.imageExtent = {width, height, depth};
 
         vkCmdCopyBufferToImage(
             commandBuffer,
@@ -650,7 +650,7 @@ namespace vkc
         VkImageViewCreateInfo viewInfo{};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         viewInfo.image = image;
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.viewType = type;
         viewInfo.format = format;
         viewInfo.subresourceRange.aspectMask = aspectFlags;
         viewInfo.subresourceRange.baseMipLevel = 0;
@@ -674,9 +674,9 @@ namespace vkc
         samplerInfo.magFilter = VK_FILTER_LINEAR;
         samplerInfo.minFilter = VK_FILTER_LINEAR;
 
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
 
         VkPhysicalDeviceProperties properties{};
         vkGetPhysicalDeviceProperties(Context::GetPhysicalDevice(), &properties);

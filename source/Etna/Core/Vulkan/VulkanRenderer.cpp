@@ -210,8 +210,6 @@ namespace vkc
     {
         AddRenderPass(name, initInfo);
 
-        // Automatically create framebuffers for the present pass
-        // using swapchain images
         auto ptr = ClientRenderPassesMap.find(name);
         if (ptr == ClientRenderPassesMap.end())
         {
@@ -220,7 +218,8 @@ namespace vkc
 
         auto &pass = ptr->second;
         const VkImageView* depthView = nullptr;
-
+        // Automatically create framebuffers for the present pass
+        // using swapchain images
         if (initInfo.DepthEnabled)
         {
             pass.DepthBufferTexture = std::make_unique<Texture2D>();

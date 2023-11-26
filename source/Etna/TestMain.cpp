@@ -12,6 +12,10 @@
 #include <chrono>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <FastNoise/FastNoise.h>
+
+#include "Etna/Core/Clock.h"
+
 struct Vertex
 {
     glm::vec3 Position;
@@ -29,10 +33,62 @@ struct GlobalShaderData
 {
     glm::mat4 WorldToLocal;
     glm::vec3 CameraPosition;
+    glm::mat4 MediaScroll;
 };
 
 int main(int argc, char** argv)
 {
+    auto fnCellular = FastNoise::New<FastNoise::CellularDistance>();
+    auto fnPerlin = FastNoise::New<FastNoise::Perlin>();
+    auto fnSimplex = FastNoise::New<FastNoise::Simplex>();
+
+    //fnPerlin->SetSource( fnSimplex );
+    //fnPerlin->SetOctaveCount( 10 );
+
+
+    int size = 128;
+    int sizeCube = size * size * size;
+    std::vector<float> noiseOutput1(sizeCube);
+    std::vector<float> noiseOutput2(sizeCube);
+    std::vector<float> noiseOutput3(sizeCube);
+    std::vector<float> noiseOutput4(sizeCube);
+    std::vector<unsigned char> pixelData(sizeCube*4);
+
+    auto output1 = fnCellular->GenUniformGrid3D(noiseOutput1.data(), 0, 0, 0, size, size, size, 0.01f, 1);
+    auto output2 = fnCellular->GenUniformGrid3D(noiseOutput1.data(), 0, 0, 0, size, size, size, 0.03f, 2);
+    auto output3 = fnPerlin->GenUniformGrid3D(noiseOutput3.data(), 0, 0, 0, size, size, size, 0.19f, 3);
+    auto output4 = fnSimplex->GenUniformGrid3D(noiseOutput4.data(), 0, 0, 0, size, size, size, 0.15f, 4);
+
+    float inverseRange1 = 1 / (output1.max - output1.min);
+    float inverseRange2 = 1 / (output2.max - output2.min);
+    float inverseRange3 = 1 / (output3.max - output3.min);
+    float inverseRange4 = 1 / (output4.max - output4.min);
+    int index = 0;
+    for (int z = 0; z < size; z++)
+    {
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float sample1 = 1 - (noiseOutput1[index] - output1.min) * inverseRange1;
+                float sample2 = 1 - (noiseOutput2[index] - output2.min) * inverseRange2;
+                float sample3 = 1 - (noiseOutput3[index] - output3.min) * inverseRange3;
+                float sample4 = 1 - (noiseOutput4[index] - output4.min) * inverseRange4;
+
+                sample1 *= sample1 * sample1 * sample1;
+                //sample2 *= sample2 * sample2;
+                //sample3 *= sample3 * sample3;
+
+                pixelData[index*4   ] = static_cast<unsigned char>((sample1) * 255.0f);
+                pixelData[index*4+1 ] = static_cast<unsigned char>((sample2) * 255.0f);
+                pixelData[index*4+2 ] = static_cast<unsigned char>((sample3) * 255.0f);
+                pixelData[index*4+3 ] = static_cast<unsigned char>((sample4) * 255.0f);
+
+                index++;
+            }
+        }
+    }
+
     std::vector<Vertex> vertices = {
         {{1.0, -1.0, -1.0}, {1.0, 0.0}},
         {{1.0, -1.0, 1.0}, {1.0, 1.0}},
@@ -58,6 +114,8 @@ int main(int argc, char** argv)
     LogsInit();
     glfwInit();
 
+
+    Clock clock;
     vkc::Renderer renderer;
     renderer.Init();
     // All vulkanish code should go inside the following scope
@@ -65,7 +123,7 @@ int main(int argc, char** argv)
         vkc::IndexBuffer indexBuffer(vkc::Context::GetTransferCommandPool(), indices.data(), indices.size());
         vkc::VertexBuffer<Vertex> vertexBuffer(vkc::Context::GetTransferCommandPool(), vertices.data(), vertices.size());
 
-        vkc::Texture2D texture("../assets/images/Johny.jpg");
+        vkc::Texture3D texture(pixelData.data(), VkExtent3D(size, size, size));
         vkc::UniformBuffer<ObjectShaderData> objectUniformBuffer(renderer.GetFramesCount());
         vkc::UniformBuffer<GlobalShaderData> globalUniformBuffer(renderer.GetFramesCount());
 
@@ -103,18 +161,37 @@ int main(int argc, char** argv)
             .DescriptorSetLayouts = layouts
         };
 
-        renderer.AddPresentPass("base_pass", createInfo);
+        renderer.AddPresentPass("BasePass", createInfo);
 
         auto startTime = std::chrono::high_resolution_clock::now();
-
+        float cubePhi = 0;
+        float cubeTheta = 0;
+        float rotationSpeed = 100.f;
+        float controlledFrameTime = 0;
         while (!glfwWindowShouldClose(vkc::Context::GetWindow()))
         {
             glfwPollEvents();
+            float deltaTime = 0.016;
+            if (glfwGetKey(vkc::Context::GetWindow(), GLFW_KEY_A) == GLFW_PRESS)
+                cubePhi -= rotationSpeed * deltaTime;
+            if (glfwGetKey(vkc::Context::GetWindow(), GLFW_KEY_D) == GLFW_PRESS)
+                cubePhi += rotationSpeed * deltaTime;
+            if (glfwGetKey(vkc::Context::GetWindow(), GLFW_KEY_W) == GLFW_PRESS)
+                cubeTheta -= rotationSpeed * deltaTime;
+            if (glfwGetKey(vkc::Context::GetWindow(), GLFW_KEY_S) == GLFW_PRESS)
+                cubeTheta += rotationSpeed * deltaTime;
+            if (glfwGetKey(vkc::Context::GetWindow(), GLFW_KEY_Q) == GLFW_PRESS)
+                controlledFrameTime += deltaTime * 0.2f;
+            if (glfwGetKey(vkc::Context::GetWindow(), GLFW_KEY_E) == GLFW_PRESS)
+                controlledFrameTime -= deltaTime * 0.2f;
+            if (glfwGetKey(vkc::Context::GetWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
+                glfwSetWindowShouldClose(vkc::Context::GetWindow(), true);
+
             VkRect2D rect = {{0,0}, renderer.GetSwapchainExtent()};
 
-            renderer.EnqueuePresentPass("base_pass", rect,
+            renderer.EnqueuePresentPass("BasePass", rect,
                 [rect, &perFrameSets, &indexBuffer, &vertexBuffer, indicesCount]
-                (vkc::RenderPassContext rpc)
+                (vkc::RenderPassContext&& rpc)
                 {
                     VkViewport viewport = {
                         0.0f, 0.0f,
@@ -142,8 +219,9 @@ int main(int argc, char** argv)
             // Update MVP matrix
             auto currentTime = std::chrono::high_resolution_clock::now();
             float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+            auto rot = glm::rotate(glm::mat4(1.0f), glm::radians(cubePhi), glm::vec3(0.0f, 0.0f, 1.0f));
             ObjectShaderData osd = {
-                .Model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+                .Model = glm::rotate(rot, glm::radians(cubeTheta), glm::vec3(0.0f, 1.0f, 0.0f)),
                 .View = glm::lookAt(glm::vec3(3.0f, 3.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
                 .Projection = glm::perspective(glm::radians(45.0f), (float)1280 / (float)720, 0.1f, 10.0f)
             };
@@ -151,10 +229,21 @@ int main(int argc, char** argv)
 
             glm::mat4 worldToLocal = glm::inverse(osd.Model);
 
+            float frameTime = clock.Elapsed();
+            glm::mat4 mediaScroll = {
+                {-frameTime, frameTime, -frameTime,0},
+                {frameTime, -frameTime, frameTime, 0},
+                {frameTime, frameTime, -frameTime, 0},
+                {frameTime, frameTime, frameTime,0}
+            };
+
             GlobalShaderData gsd = {
                 .WorldToLocal = worldToLocal,
-                .CameraPosition = glm::vec3(3.0f, 3.0f, 3.0f)
+                .CameraPosition = glm::vec3(3.0f, 3.0f, 3.0f),
+                //.FrameTime = (float)cos(clock.Elapsed() * 0.5f) * 0.49f + 0.5f,
+                .MediaScroll = mediaScroll
             };
+            //InfoLog("FrameTime: %f", gsd.FrameTime);
 
             objectUniformBuffer.Update(&osd, renderer.GetCurrentFrame());
             globalUniformBuffer.Update(&gsd, renderer.GetCurrentFrame());

@@ -46,7 +46,7 @@ namespace vkc
     class Texture3D : public Texture
     {
     public:
-        Texture3D(std::byte* data, VkExtent3D extent);
+        Texture3D(unsigned char* data, VkExtent3D extent);
         ~Texture3D() = default;
     };
 }

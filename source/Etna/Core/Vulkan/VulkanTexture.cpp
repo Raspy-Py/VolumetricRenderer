@@ -81,7 +81,7 @@ namespace vkc
         );
     }
 
-    Texture3D::Texture3D(std::byte *data, VkExtent3D extent)
+    Texture3D::Texture3D(unsigned char *data, VkExtent3D extent)
     {
         Width = static_cast<int>(extent.width);
         Height = static_cast<int>(extent.height);
@@ -118,7 +118,7 @@ namespace vkc
         );
 
         TransitionImageLayout(Image, Format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        CopyBufferImage(stagingBuffer, Image, Width, Height);
+        CopyBufferImage(stagingBuffer, Image, Width, Height, Depth);
         TransitionImageLayout(Image, Format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         vkDestroyBuffer(Context::GetDevice(), stagingBuffer, Context::GetAllocator());

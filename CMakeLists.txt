@@ -72,9 +72,9 @@ set(LIBRARIES "glfw;Vulkan::Vulkan;loguru::loguru;FastNoise")
 # Use vulkan headers from glfw:
 include_directories(${GLFW_DIR}/deps)
 
-file(GLOB_RECURSE sources ${SOURCE_DIR}/*)
+file(GLOB_RECURSE SOURCES ${SOURCE_DIR}/*.cpp)
 
-add_executable(${PROJECT_NAME} ${sources}
+add_executable(${PROJECT_NAME} ${SOURCES}
         ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
         ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
         ${IMGUI_DIR}/imgui.cpp
@@ -91,7 +91,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DImTextureID=ImU64)
 # Installation
 install(PROGRAMS
         $<TARGET_FILE:${PROJECT_NAME}>
-        DESTINATION Bin)
+        DESTINATION bin)
 
 set(ALL_TARGETS ${PROJECT_NAME})
 
