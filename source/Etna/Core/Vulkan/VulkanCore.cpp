@@ -25,6 +25,7 @@ namespace vkc
         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
         void *pUserData)
     {
+        UNUSED(messageType); UNUSED(pUserData);
         if (DebugMessengerSeverity & messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
         {
             Error("Debug messenger: %s", pCallbackData->pMessage);
@@ -364,13 +365,13 @@ namespace vkc
 
     void CopyBuffer(VkBuffer src, VkBuffer dest, VkDeviceSize size)
     {
-        auto commandBuffer = BeginSingleTimeCommands();
+        auto commandBuffer = BeginSingleTimeCommands(Context::GetTransferCommandPool());
             VkBufferCopy copyRegion{};
             copyRegion.srcOffset = 0;
             copyRegion.dstOffset = 0;
             copyRegion.size = size;
             vkCmdCopyBuffer(commandBuffer, src, dest, 1, &copyRegion);
-        EndSingleTimeCommands(commandBuffer);
+        EndSingleTimeCommands(commandBuffer, Context::GetTransferCommandPool());
     }
 
     VkFormat FindDepthFormat()
@@ -505,12 +506,12 @@ namespace vkc
         CreateImage(width, height, 1, VK_IMAGE_TYPE_2D, format, tiling, usage, properties, image, imageMemory);
     }
 
-    VkCommandBuffer BeginSingleTimeCommands()
+    VkCommandBuffer BeginSingleTimeCommands(VkCommandPool commandPool)
     {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = Context::GetTransferCommandPool();
+        allocInfo.commandPool = commandPool;
         allocInfo.commandBufferCount = 1;
 
         VkCommandBuffer commandBuffer{};
@@ -525,7 +526,7 @@ namespace vkc
         return commandBuffer;
     }
 
-    void EndSingleTimeCommands(VkCommandBuffer commandBuffer)
+    void EndSingleTimeCommands(VkCommandBuffer commandBuffer, VkCommandPool commandPool)
     {
         vkEndCommandBuffer(commandBuffer);
 
@@ -536,12 +537,12 @@ namespace vkc
 
         vkQueueSubmit(Context::GetTransferQueue(), 1, &submitInfo, VK_NULL_HANDLE);
         vkQueueWaitIdle(Context::GetTransferQueue());
-        vkFreeCommandBuffers(Context::GetDevice(), Context::GetTransferCommandPool(), 1, &commandBuffer);
+        vkFreeCommandBuffers(Context::GetDevice(), commandPool, 1, &commandBuffer);
     }
 
     void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
     {
-        auto commandBuffer = BeginSingleTimeCommands();
+        auto commandBuffer = BeginSingleTimeCommands(Context::GetTransferCommandPool());
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -574,7 +575,6 @@ namespace vkc
         {
             barrier.srcAccessMask = 0;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
             sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
             destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         }else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
@@ -582,18 +582,24 @@ namespace vkc
         {
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
             sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
             destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         }else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED &&
                   newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
         {
             barrier.srcAccessMask = 0;
-            barrier.dstAccessMask =
-                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
+            barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                                    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
             sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
             destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        }else if (oldLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR &&
+                  newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            Error("TRANSITION FROM PRESENTATION.");
+            sourceStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+            destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         }else
         {
             Error("Unsupported layout transition: %i->%i.", (int) oldLayout, (int) newLayout);
@@ -609,12 +615,12 @@ namespace vkc
             1, &barrier
         );
 
-        EndSingleTimeCommands(commandBuffer);
+        EndSingleTimeCommands(commandBuffer, Context::GetTransferCommandPool());
     }
 
     void CopyBufferImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t depth)
     {
-        auto commandBuffer = BeginSingleTimeCommands();
+        auto commandBuffer = BeginSingleTimeCommands(Context::GetTransferCommandPool());
 
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
@@ -638,7 +644,7 @@ namespace vkc
             &region
         );
 
-        EndSingleTimeCommands(commandBuffer);
+        EndSingleTimeCommands(commandBuffer, Context::GetTransferCommandPool());
     }
 
     VkImageView CreateImageView(

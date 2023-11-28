@@ -95,8 +95,8 @@ namespace vkc
     void CopyBufferImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t depth = 1);
 
     /// For executing single time commands like buffer coping or layout transition
-    VkCommandBuffer BeginSingleTimeCommands();
-    void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+    VkCommandBuffer BeginSingleTimeCommands(VkCommandPool commandPool);
+    void EndSingleTimeCommands(VkCommandBuffer commandBuffer, VkCommandPool commandPool);
 
     void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 

@@ -1,7 +1,6 @@
 #include "VulkanTexture.h"
 
 #include "Etna/Core/Utils.h"
-#include <cstring>
 
 namespace vkc
 {
@@ -55,30 +54,58 @@ namespace vkc
         Sampler = CreateSampler();
     }
 
-    void Texture2D::CreateDepthBuffer(Texture2D &texture, int width, int height)
+    Ref<Texture2D> Texture2D::CreateDepthBuffer(uint32_t width, uint32_t height)
     {
-        texture.Width = width;
-        texture.Height = height;
-        texture.Depth = 1;
-        texture.Channels = 1;
-        texture.Format = FindDepthFormat();
+        auto texture = new Texture2D;
+        texture->Width = width;
+        texture->Height = height;
+        texture->Depth = 1;
+        texture->Channels = 1;
+        texture->Format = FindDepthFormat();
 
         CreateImage2D(
             width, height,
-            texture.Format,
+            texture->Format,
             VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            texture.Image,
-            texture.Memory
+            texture->Image,
+            texture->Memory
         );
 
-        texture.ImageView = CreateImageView(
-            texture.Image,
-            texture.Format,
+        texture->ImageView = CreateImageView(
+            texture->Image,
+            texture->Format,
             VK_IMAGE_VIEW_TYPE_2D,
             VK_IMAGE_ASPECT_DEPTH_BIT
         );
+
+        return texture;
+    }
+
+    Ref<Texture2D> Texture2D::CreateRenderTarget(uint32_t width, uint32_t height, VkFormat format)
+    {
+        auto texture = new Texture2D;
+
+        CreateImage2D(
+            width, height,
+            format,
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            texture->Image,
+            texture->Memory
+        );
+
+        texture->Sampler = CreateSampler();
+        texture->ImageView = CreateImageView(texture->Image, format);
+        texture->Format = format;
+        texture->Width = static_cast<int>(width);
+        texture->Height = static_cast<int>(height);
+        texture->Depth = 1;
+        texture->Channels = 4;
+
+        return texture;
     }
 
     Texture3D::Texture3D(unsigned char *data, VkExtent3D extent)

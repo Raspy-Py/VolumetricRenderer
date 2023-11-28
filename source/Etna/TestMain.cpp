@@ -16,6 +16,8 @@
 
 #include "Etna/Core/Clock.h"
 
+#include "imgui.h"
+
 struct Vertex
 {
     glm::vec3 Position;
@@ -161,7 +163,7 @@ int main(int argc, char** argv)
             .DescriptorSetLayouts = layouts
         };
 
-        renderer.AddPresentPass("BasePass", createInfo);
+        renderer.AddRenderPass("BasePass", createInfo);
 
         auto startTime = std::chrono::high_resolution_clock::now();
         float cubePhi = 0;
@@ -189,7 +191,7 @@ int main(int argc, char** argv)
 
             VkRect2D rect = {{0,0}, renderer.GetSwapchainExtent()};
 
-            renderer.EnqueuePresentPass("BasePass", rect,
+            renderer.EnqueueRenderPass("BasePass", rect, {},
                 [rect, &perFrameSets, &indexBuffer, &vertexBuffer, indicesCount]
                 (vkc::RenderPassContext&& rpc)
                 {
@@ -214,8 +216,6 @@ int main(int argc, char** argv)
                     vkCmdDrawIndexed(rpc.CommandBuffer, indicesCount, 1, 0, 0, 0);
                 });
 
-            renderer.BeginFrame();
-
             // Update MVP matrix
             auto currentTime = std::chrono::high_resolution_clock::now();
             float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
@@ -231,10 +231,10 @@ int main(int argc, char** argv)
 
             float frameTime = clock.Elapsed();
             glm::mat4 mediaScroll = {
-                {-frameTime, frameTime, -frameTime,0},
-                {frameTime, -frameTime, frameTime, 0},
-                {frameTime, frameTime, -frameTime, 0},
-                {frameTime, frameTime, frameTime,0}
+                {-frameTime, 0, -0,0},
+                {0, -0, 0, 0},
+                {0, 0, -0, 0},
+                {0, 0, 0,0}
             };
 
             GlobalShaderData gsd = {
@@ -248,7 +248,10 @@ int main(int argc, char** argv)
             objectUniformBuffer.Update(&osd, renderer.GetCurrentFrame());
             globalUniformBuffer.Update(&gsd, renderer.GetCurrentFrame());
 
-            renderer.RenderFrame();
+            renderer.BeginFrame();
+            // ImGui stuff goes here
+            static bool show_demo_window = true;
+            ImGui::ShowDemoWindow(&show_demo_window);
             renderer.EndFrame();
         }
 

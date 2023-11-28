@@ -2,9 +2,11 @@
 #define VULKANTEXTURE_H
 
 #include "VulkanCore.h"
+#include "VulkanMemory.h"
 
 #include <stb_image.h>
 #include <string>
+#include <memory>
 
 namespace vkc
 {
@@ -14,10 +16,13 @@ namespace vkc
         Texture() = default;
         ~Texture();
 
-        [[nodiscard]] const VkImageView& GetView() const { return ImageView; }
-        [[nodiscard]] const VkImage & GetImage() const { return Image; }
-        [[nodiscard]] const VkSampler& GetSampler() const { return Sampler; }
-        [[nodiscard]] const VkFormat& GetFormat() const { return Format; }
+        [[nodiscard]] VkImageView GetView() const { return ImageView; }
+        [[nodiscard]] VkImage GetImage() const { return Image; }
+        [[nodiscard]] VkSampler GetSampler() const { return Sampler; }
+        [[nodiscard]] VkFormat GetFormat() const { return Format; }
+        [[nodiscard]] uint32_t GetWidth() const { return Width; }
+        [[nodiscard]] uint32_t GetHeight() const { return Height; }
+        [[nodiscard]] VkExtent2D GetExtent() const { return {static_cast<uint32_t>(Width), static_cast<uint32_t>(Height)}; }
 
     protected:
         int Width;
@@ -32,15 +37,19 @@ namespace vkc
         VkDeviceMemory Memory;
     };
 
+
     class Texture2D : public Texture
     {
+    public:
+
     public:
         explicit Texture2D(const std::string& imagePath);
         Texture2D() = default;
         ~Texture2D() = default;
 
     public:
-        static void CreateDepthBuffer(Texture2D& texture, int width, int height);
+        static Ref<Texture2D> CreateDepthBuffer(uint32_t width, uint32_t height);
+        static Ref<Texture2D> CreateRenderTarget(uint32_t width, uint32_t height, VkFormat format);
     };
 
     class Texture3D : public Texture
@@ -49,6 +58,7 @@ namespace vkc
         Texture3D(unsigned char* data, VkExtent3D extent);
         ~Texture3D() = default;
     };
+
 }
 
 #endif //VULKANTEXTURE_H

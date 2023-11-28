@@ -170,12 +170,11 @@ namespace vkc
 
         CreateImageViews(swapchain);
 
-        // We can afford a full copy, as it only owns the handles of Vulkan objects
-        // not the objects themselves
-
         g_ImageOccurrences.clear();
         g_ImageOccurrences.resize(swapchain.ImageCount);
 
+        // We can afford a full copy, as it only owns the handles of Vulkan objects
+        // not the objects themselves
         return swapchain;
     }
 
@@ -196,6 +195,7 @@ namespace vkc
     {
         return VK_PRESENT_MODE_FIFO_KHR;
 
+        // Produce lags on linux
         for (const auto& presentMode : presentModes)
         {
             if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
