@@ -1,0 +1,13 @@
+[submodule "imgui"]
+	path = vendor/imgui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking
+[submodule "loguru"]
+	path = vendor/loguru
+	url = https://github.com/emilk/loguru.git
+[submodule "glfw"]
+	path = vendor/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "vendor/noise"]
+	path = vendor/noise
+	url = https://github.com/Auburn/FastNoise2.git

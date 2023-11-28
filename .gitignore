@@ -80,3 +80,4 @@ imgui.ini
 # Custom
 bin/
 cmake-build-*/
+logs/

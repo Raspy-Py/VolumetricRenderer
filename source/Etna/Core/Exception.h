@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ETNAEXCEPTION_H
+#define ETNAEXCEPTION_H
 #include <exception>
 #include <string>
 
@@ -17,3 +18,5 @@ private:
 	std::string m_Msg;
 	mutable std::string m_WhatBuffer;
 };
+
+#endif // ETNAEXCEPTION_H

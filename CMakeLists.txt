@@ -3,7 +3,10 @@ cmake_minimum_required(VERSION 3.22)
 set(PROJECT_NAME VolumetricRenderer)
 project(${PROJECT_NAME} C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -DVK_PROTOTYPES")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -DVK_PROTOTYPES")
+
+set(CMAKE_CXX_STANDARD 20)
 set(WARNINGS_AS_ERRORS OFF)
 set(ENABLE_PVS_STUDIO OFF)
 
@@ -16,6 +19,7 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif ()
 
+# Wanna keep my switches compatible with VS
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
     add_compile_definitions(_DEBUG)
 else()
@@ -24,81 +28,74 @@ endif()
 
 include(cmake/CompilerWarnings.cmake)
 
-set(INC ${CMAKE_SOURCE_DIR}/include)
-set(SRC ${CMAKE_SOURCE_DIR}/source)
-set(VND ${CMAKE_SOURCE_DIR}/vendor)
+# Shortcuts
+set(SOURCE_DIR  ${CMAKE_SOURCE_DIR}/source)
+set(VENDOR_DIR  ${CMAKE_SOURCE_DIR}/vendor)
 
-add_executable(${PROJECT_NAME}
-        # Header only
-        ${SRC}/Etna/Core/Environment.h
+set(IMGUI_DIR ${VENDOR_DIR}/imgui)
+set(GLFW_DIR ${VENDOR_DIR}/glfw)
+set(LOGURU_DIR ${VENDOR_DIR}/loguru)
+set(FAST_NOISE_DIR ${VENDOR_DIR}/noise)
 
-        # Source only
-        ${SRC}/Etna/Core/EntryPoint.cpp
-        ${SRC}/EtnaApplication.cpp
+include_directories(${PROJECT_NAME} ${SOURCE_DIR})
+include_directories(${PROJECT_NAME} ${SOURCE_DIR})
+include_directories(${PROJECT_NAME} ${SOURCE_DIR})
 
-        # Header - Source
-        ${SRC}/Etna/Core/Etna.h         ${SRC}/Etna/Core/Etna.cpp
-        ${SRC}/Etna/Core/Clock.h        ${SRC}/Etna/Core/Clock.cpp
-        ${SRC}/Etna/Core/Exception.h    ${SRC}/Etna/Core/Exception.cpp
-        ${SRC}/Etna/Core/ImGuiTheme.h   ${SRC}/Etna/Core/ImGuiTheme.cpp
-        ${SRC}/Etna/Layers/Canvas.h     ${SRC}/Etna/Layers/Canvas.cpp
+# GLFW
+option(GLFW_BUILD_EXAMPLES "Build the GLFW example programs" OFF)
+option(GLFW_BUILD_TESTS "Build the GLFW test programs" OFF)
+option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
+option(GLFW_INSTALL "Generate installation target" OFF)
+option(GLFW_DOCUMENT_INTERNALS "Include internals in documentation" OFF)
+add_subdirectory(${GLFW_DIR} bin EXCLUDE_FROM_ALL)
+include_directories(${GLFW_DIR}/include)
 
-        # Third-party
-        ${VND}/loguru/loguru.hpp
-        ${VND}/loguru/loguru.cpp
+# Dear ImGui
+include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends ..)
 
-        ${VND}/imgui/imconfig.h
-        ${VND}/imgui/imgui.h
-        ${VND}/imgui/imgui_impl_glfw.h
-        ${VND}/imgui/imgui_impl_vulkan.h
-        ${VND}/imgui/imgui_internal.h
-        ${VND}/imgui/imstb_rectpack.h
-        ${VND}/imgui/imstb_textedit.h
-        ${VND}/imgui/imstb_truetype.h
-        ${VND}/imgui/imgui_impl_glfw.cpp
-        ${VND}/imgui/imgui_impl_vulkan.cpp
-        ${VND}/imgui/imgui.cpp
-        ${VND}/imgui/imgui_demo.cpp
-        ${VND}/imgui/imgui_draw.cpp
-        ${VND}/imgui/imgui_tables.cpp
-        ${VND}/imgui/imgui_widgets.cpp
-)
+# Loguru
+set(LOGURU_WITH_STREAMS TRUE)
+add_subdirectory(${LOGURU_DIR}) # defines target 'loguru::loguru'
+include_directories(${LOGURU_DIR})
 
+# STB image
+include_directories(${VENDOR_DIR}/stb)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${SRC} ${INC} ${VND})
+# FastNoise2
+add_subdirectory(${FAST_NOISE_DIR})
+include_directories(${FAST_NOISE_DIR})
 
-##########################################################
-# Vendor
-##########################################################
-
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-
+# Libraries
 find_package(Vulkan REQUIRED)
-find_package(glfw3 3.3 REQUIRED)
+set(LIBRARIES "glfw;Vulkan::Vulkan;loguru::loguru;FastNoise")
 
-target_include_directories(${PROJECT_NAME}
-        PUBLIC ${Vulkan_INCLUDE_DIR}
-        PUBLIC ${GLFW_INCLUDE_DIRS}
+# Use vulkan headers from glfw:
+include_directories(${GLFW_DIR}/deps)
+
+file(GLOB_RECURSE SOURCES ${SOURCE_DIR}/*.cpp)
+
+add_executable(${PROJECT_NAME} ${SOURCES}
+        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+        ${VENDOR_DIR}/stb/stb_image.cpp
 )
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+target_compile_definitions(${PROJECT_NAME} PUBLIC -DImTextureID=ImU64)
 
-target_link_libraries(${PROJECT_NAME}
-        ${Vulkan_LIBRARIES}
-        glfw
-)
 
-##########################################################
-# Fixed CMakeLists.txt part
-##########################################################
-
-INSTALL(PROGRAMS
+# Installation
+install(PROGRAMS
         $<TARGET_FILE:${PROJECT_NAME}>
         DESTINATION bin)
 
 set(ALL_TARGETS ${PROJECT_NAME})
 
-SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
